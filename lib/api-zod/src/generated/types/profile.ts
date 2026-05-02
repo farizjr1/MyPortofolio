@@ -26,5 +26,6 @@ export interface Profile {
   skills?: SkillItem[];
   tools?: string[];
   expertiseAreas?: string[];
+  typewriterTitles?: string[];
   updatedAt?: Date;
 }

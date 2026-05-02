@@ -114,6 +114,7 @@ export interface Profile {
   skills?: SkillItem[];
   tools?: string[];
   expertiseAreas?: string[];
+  typewriterTitles?: string[];
   updatedAt?: string;
 }
 
@@ -133,6 +134,7 @@ export interface UpdateProfileBody {
   skills?: SkillItem[];
   tools?: string[];
   expertiseAreas?: string[];
+  typewriterTitles?: string[];
 }
 
 export interface PortfolioProject {

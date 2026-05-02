@@ -81,6 +81,7 @@ export async function seedDatabase() {
         ],
         tools: ["SAP", "MYOB", "Accurate Online", "Microsoft Office", "Figma", "VS Code", "Git", "Postman"],
         expertiseAreas: ["Laporan Keuangan", "Perpajakan", "Audit Internal", "Pengembangan Web", "Sistem Informasi Akuntansi", "Analisis Data"],
+        typewriterTitles: ["Accountant", "Tech Enthusiast", "Finance Enthusiast"],
       });
       logger.info("Profile template seeded");
     }

@@ -25,4 +25,5 @@ export interface UpdateProfileBody {
   skills?: SkillItem[];
   tools?: string[];
   expertiseAreas?: string[];
+  typewriterTitles?: string[];
 }

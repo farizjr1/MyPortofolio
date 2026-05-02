@@ -156,6 +156,7 @@ export const GetProfileResponse = zod.object({
     .optional(),
   tools: zod.array(zod.string()).optional(),
   expertiseAreas: zod.array(zod.string()).optional(),
+  typewriterTitles: zod.array(zod.string()).optional(),
   updatedAt: zod.coerce.date().optional(),
 });
 
@@ -214,6 +215,7 @@ export const UpdateProfileBody = zod.object({
     .optional(),
   tools: zod.array(zod.string()).optional(),
   expertiseAreas: zod.array(zod.string()).optional(),
+  typewriterTitles: zod.array(zod.string()).optional(),
 });
 
 export const updateProfileResponseSkillsItemLevelMax = 100;
@@ -269,6 +271,7 @@ export const UpdateProfileResponse = zod.object({
     .optional(),
   tools: zod.array(zod.string()).optional(),
   expertiseAreas: zod.array(zod.string()).optional(),
+  typewriterTitles: zod.array(zod.string()).optional(),
   updatedAt: zod.coerce.date().optional(),
 });
 

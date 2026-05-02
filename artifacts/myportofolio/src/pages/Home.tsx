@@ -4,12 +4,7 @@ import { useGetProfile } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Github, Linkedin, Mail } from "lucide-react";
 
-const TITLES = [
-  "Web Developer",
-  "Full-stack Engineer",
-  "Accounting Professional",
-  "Tech Enthusiast",
-];
+const DEFAULT_TITLES = ["Accountant", "Tech Enthusiast", "Finance Enthusiast"];
 const PERIOD = 2000;
 
 function useTypewriter(toRotate: string[], period: number) {
@@ -117,7 +112,11 @@ function AvatarRing({ src, name }: { src?: string; name?: string }) {
 
 export default function Home() {
   const { data: profile } = useGetProfile();
-  const txt = useTypewriter(TITLES, PERIOD);
+  const titles =
+    profile?.typewriterTitles && profile.typewriterTitles.length > 0
+      ? profile.typewriterTitles
+      : DEFAULT_TITLES;
+  const txt = useTypewriter(titles, PERIOD);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -151,7 +150,7 @@ export default function Home() {
             transition={{ delay: 0.15, duration: 0.5, ease: "easeOut" }}
           >
             <AvatarRing
-              src={profile?.avatarUrl || undefined}
+              src={profile?.avatarUrl || "/avatar-placeholder.svg"}
               name={displayName}
             />
           </motion.div>
