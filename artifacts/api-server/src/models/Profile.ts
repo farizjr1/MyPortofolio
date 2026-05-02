@@ -45,6 +45,7 @@ export interface IProfile extends Document {
   skills: ISkill[];
   tools: string[];
   expertiseAreas: string[];
+  typewriterTitles: string[];
   updatedAt: Date;
 }
 
@@ -102,6 +103,7 @@ const ProfileSchema = new Schema<IProfile>(
     skills: [SkillSchema],
     tools: [{ type: String }],
     expertiseAreas: [{ type: String }],
+    typewriterTitles: [{ type: String }],
   },
   { timestamps: true },
 );

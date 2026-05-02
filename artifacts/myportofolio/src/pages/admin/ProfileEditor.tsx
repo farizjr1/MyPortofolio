@@ -20,7 +20,8 @@ export default function ProfileEditor() {
   const [formData, setFormData] = useState<any>({
     name: "", title: "", bio: "", email: "", phone: "", location: "",
     avatarUrl: "", githubUrl: "", linkedinUrl: "", websiteUrl: "",
-    education: [], experience: [], skills: [], tools: [], expertiseAreas: []
+    education: [], experience: [], skills: [], tools: [], expertiseAreas: [],
+    typewriterTitles: ""
   });
 
   useEffect(() => {
@@ -40,7 +41,8 @@ export default function ProfileEditor() {
         experience: profile.experience || [],
         skills: profile.skills || [],
         tools: profile.tools?.join(", ") || "",
-        expertiseAreas: profile.expertiseAreas?.join(", ") || ""
+        expertiseAreas: profile.expertiseAreas?.join(", ") || "",
+        typewriterTitles: (profile as any).typewriterTitles?.join(", ") || ""
       });
     }
   }, [profile]);
@@ -59,6 +61,7 @@ export default function ProfileEditor() {
       ...formData,
       tools: typeof formData.tools === "string" ? formData.tools.split(",").map((t: string) => t.trim()).filter(Boolean) : formData.tools,
       expertiseAreas: typeof formData.expertiseAreas === "string" ? formData.expertiseAreas.split(",").map((t: string) => t.trim()).filter(Boolean) : formData.expertiseAreas,
+      typewriterTitles: typeof formData.typewriterTitles === "string" ? formData.typewriterTitles.split(",").map((t: string) => t.trim()).filter(Boolean) : formData.typewriterTitles,
     };
     updateMutation.mutate({ data: payload });
   };
@@ -129,7 +132,16 @@ export default function ProfileEditor() {
               </div>
               <div className="space-y-2">
                 <Label>Avatar URL</Label>
-                <Input value={formData.avatarUrl} onChange={e => setFormData({ ...formData, avatarUrl: e.target.value })} />
+                <Input value={formData.avatarUrl} onChange={e => setFormData({ ...formData, avatarUrl: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Typewriter Titles <span className="text-muted-foreground font-normal text-xs">(pisahkan dengan koma)</span></Label>
+                <Input
+                  value={formData.typewriterTitles}
+                  onChange={e => setFormData({ ...formData, typewriterTitles: e.target.value })}
+                  placeholder="Accountant, Tech Enthusiast, Finance Enthusiast"
+                />
+                <p className="text-xs text-muted-foreground">Teks yang berputar di halaman Home. Contoh: Accountant, Tech Enthusiast, Finance Enthusiast</p>
               </div>
             </CardContent>
           </Card>
