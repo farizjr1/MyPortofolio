@@ -1,6 +1,6 @@
 # Fariz Jelang Ramadhan — Portfolio & CMS
 
-Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting CMS** dan **ATS CV Generator**. Dibangun dengan stack modern: React 19 + Vite di frontend dan Express 5 + MongoDB di backend.
+Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting CMS** dan **ATS CV Generator**. Dibangun dengan stack modern React 19 + Vite di sisi frontend dan Express 5 + MongoDB di sisi backend, dikelola dalam satu monorepo menggunakan pnpm workspaces.
 
 ---
 
@@ -10,17 +10,13 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 - [Tech Stack](#tech-stack)
 - [Struktur Proyek](#struktur-proyek)
 - [Prasyarat](#prasyarat)
-- [Instalasi & Setup Lokal](#instalasi--setup-lokal)
-- [Konfigurasi Environment](#konfigurasi-environment)
-- [Menjalankan Aplikasi](#menjalankan-aplikasi)
-- [Panduan Penggunaan](#panduan-penggunaan)
-  - [Site Publik](#1-site-publik)
-  - [Login & Register](#2-login--register)
-  - [Admin Dashboard](#3-admin-dashboard)
-  - [ATS CV Generator](#4-ats-cv-generator)
+- [Environment Variables](#environment-variables)
+- [1. Development — Lokal di Laptop](#1-development--lokal-di-laptop)
+- [2. Testing — di Replit](#2-testing--di-replit)
+- [3. Production — Deploy ke Server](#3-production--deploy-ke-server)
+- [Panduan Penggunaan Aplikasi](#panduan-penggunaan-aplikasi)
 - [API Reference](#api-reference)
-- [Deploy ke Produksi](#deploy-ke-produksi)
-- [Git Workflow](#git-workflow)
+- [Arsitektur & Alur Data](#arsitektur--alur-data)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -29,27 +25,26 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 
 | Fitur | Deskripsi |
 |---|---|
-| 🌐 **Portfolio Publik** | Halaman Home, About, Portfolio, dan Contact yang dinamis |
-| 🔐 **Auth System** | Register, Login, Verifikasi Email, Forgot/Reset Password |
-| 🛡️ **RBAC** | Role-based access control (Admin / Viewer) via JWT |
+| 🌐 **Portfolio Publik** | Halaman Home, About, Portfolio, Contact yang dinamis |
+| 🔐 **Secret Admin Login** | Login hanya via `/flutceadmin` — tidak tampil di navbar |
+| 🛡️ **JWT Auth + RBAC** | Role-based access (Admin / Viewer) dengan token JWT |
 | 📋 **Admin Dashboard** | CRUD lengkap untuk Portfolio, Content CMS, Profile |
-| 📄 **ATS CV Generator** | Buat dan download CV dalam format PDF yang ATS-friendly |
-| 🗄️ **MongoDB** | In-memory saat dev, MongoDB Atlas di produksi |
+| 📄 **ATS CV Generator** | Buat & download CV PDF yang ATS-friendly |
+| 🗄️ **Auto Seed Data** | Template data otomatis terisi saat database masih kosong |
+| 🗄️ **MongoDB Fleksibel** | In-memory saat dev, MongoDB Atlas saat production |
 | 📧 **Email Notifikasi** | Verifikasi email & reset password via SMTP/Gmail |
-| 🎨 **Dark Aesthetic** | Tema gelap (#121212) dengan aksen amber (#FDE68A) |
-| ✨ **Animasi** | Framer Motion untuk transisi dan micro-interaction halus |
 
 ---
 
 ## Tech Stack
 
-### Frontend (`artifacts/portfolio`)
+### Frontend (`artifacts/myportofolio`)
 - **React 19** + **Vite** + **TypeScript**
 - **Tailwind CSS** + **Shadcn/UI** — komponen UI
 - **Framer Motion** — animasi
-- **@react-pdf/renderer** — generate PDF CV langsung di browser
+- **@react-pdf/renderer** — generate PDF CV di browser
 - **TanStack Query** — data fetching & caching
-- **React Router v7** — routing SPA
+- **Wouter** — routing SPA
 
 ### Backend (`artifacts/api-server`)
 - **Express 5** + **TypeScript**
@@ -60,10 +55,10 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 - **Pino** — structured logging
 - **mongodb-memory-server** — in-memory MongoDB untuk development
 
-### Shared Libraries
-- `lib/api-spec` — OpenAPI 3.0 spec (contract-first)
-- `lib/api-zod` — Zod schemas di-generate otomatis dari OpenAPI
-- `lib/api-client-react` — React Query hooks di-generate otomatis
+### Shared Libraries (`lib/`)
+- `lib/api-spec` — OpenAPI 3.0 spec (sumber kebenaran API)
+- `lib/api-zod` — Zod schemas (di-generate otomatis dari OpenAPI)
+- `lib/api-client-react` — React Query hooks (di-generate otomatis)
 
 ---
 
@@ -72,265 +67,632 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 ```
 MyPortofolio/
 ├── artifacts/
-│   ├── api-server/          # Backend Express API
+│   ├── api-server/                  # Backend Express API
 │   │   └── src/
-│   │       ├── models/      # Mongoose schemas (User, Profile, Portfolio, Content, CvData)
-│   │       ├── routes/      # Route handlers (auth, profile, portfolio, content, cv)
-│   │       ├── middlewares/ # JWT auth, RBAC
-│   │       └── lib/         # MongoDB connection (in-memory fallback)
-│   └── portfolio/           # Frontend React + Vite
+│   │       ├── app.ts               # Setup Express, CORS, Helmet
+│   │       ├── index.ts             # Entry point, bind port
+│   │       ├── models/              # Mongoose schemas
+│   │       │   ├── User.ts
+│   │       │   ├── Profile.ts
+│   │       │   ├── Portfolio.ts
+│   │       │   ├── Content.ts
+│   │       │   └── CvData.ts
+│   │       ├── routes/              # Route handlers
+│   │       │   ├── auth.ts          # Register, login, verify, reset
+│   │       │   ├── profile.ts       # GET/PUT profile publik
+│   │       │   ├── portfolio.ts     # CRUD proyek portfolio
+│   │       │   ├── content.ts       # CMS konten halaman
+│   │       │   ├── cv.ts            # CRUD data CV
+│   │       │   └── health.ts        # Health check
+│   │       ├── middlewares/
+│   │       │   └── auth.ts          # JWT middleware + RBAC
+│   │       └── lib/
+│   │           ├── mongodb.ts       # Koneksi MongoDB + auto-seed
+│   │           ├── seed.ts          # Template data awal
+│   │           └── logger.ts        # Pino logger
+│   └── myportofolio/                # Frontend React + Vite
 │       └── src/
-│           ├── pages/       # Home, About, Portfolio, Contact, Auth, Admin
-│           ├── components/  # Layout, UI components
-│           └── hooks/       # Custom hooks
+│           ├── App.tsx              # Router utama
+│           ├── pages/
+│           │   ├── Home.tsx
+│           │   ├── About.tsx
+│           │   ├── Portfolio.tsx
+│           │   ├── Contact.tsx
+│           │   ├── auth/
+│           │   │   ├── Login.tsx    # Akses via /flutceadmin
+│           │   │   ├── Register.tsx
+│           │   │   ├── ForgotPassword.tsx
+│           │   │   └── VerifyEmail.tsx
+│           │   └── admin/
+│           │       ├── Dashboard.tsx
+│           │       ├── PortfolioList.tsx
+│           │       ├── Content.tsx
+│           │       ├── ProfileEditor.tsx
+│           │       ├── CvManager.tsx
+│           │       └── CvGenerator.tsx
+│           ├── components/
+│           │   ├── layout/
+│           │   │   ├── Navbar.tsx
+│           │   │   ├── PublicLayout.tsx
+│           │   │   └── AdminLayout.tsx
+│           │   └── ui/              # Shadcn/UI components
+│           └── lib/
+│               └── auth.ts          # JWT token helper
 ├── lib/
-│   ├── api-spec/            # openapi.yaml (sumber kebenaran API)
-│   ├── api-zod/             # Zod schemas (auto-generated)
-│   └── api-client-react/   # React Query hooks (auto-generated)
-├── .env.example             # Template environment variables
-├── ENV_MANAGEMENT.md        # Panduan lengkap manajemen env & secrets
-├── GIT_WORKFLOW.md          # Panduan Git Flow
-└── .github/workflows/
-    └── deploy.yml           # CI/CD ke Vercel via GitHub Actions
+│   ├── api-spec/
+│   │   └── openapi.yaml            # Kontrak API (sumber kebenaran)
+│   ├── api-zod/
+│   │   └── src/generated/          # Zod schemas (auto-generated)
+│   └── api-client-react/
+│       └── src/generated/          # React Query hooks (auto-generated)
+├── .env.example                    # Template environment variables
+├── .github/workflows/deploy.yml    # CI/CD GitHub Actions ke Vercel
+├── ENV_MANAGEMENT.md               # Panduan lengkap manajemen env & secrets
+├── GIT_WORKFLOW.md                 # Panduan Git Flow branching
+└── pnpm-workspace.yaml             # Konfigurasi monorepo
 ```
 
 ---
 
 ## Prasyarat
 
-Pastikan sudah terinstall:
+Pastikan sudah terinstall di laptop/server kamu:
 
-- **Node.js** v20 atau lebih baru
-- **pnpm** v9 atau lebih baru (`npm install -g pnpm`)
-- **MongoDB** (opsional — app otomatis pakai in-memory MongoDB saat development)
+| Tool | Versi Minimum | Cara Install |
+|---|---|---|
+| **Node.js** | v20 | https://nodejs.org |
+| **pnpm** | v9 | `npm install -g pnpm` |
+| **Git** | v2 | https://git-scm.com |
+
+MongoDB **tidak wajib** diinstall lokal — app otomatis pakai in-memory MongoDB saat development.
 
 ---
 
-## Instalasi & Setup Lokal
+## Environment Variables
 
-### 1. Clone repository
+Semua environment variable yang dibutuhkan:
+
+| Variable | Wajib | Deskripsi | Contoh Nilai |
+|---|---|---|---|
+| `PORT` | ✅ | Port backend berjalan | `8080` |
+| `NODE_ENV` | ✅ | Mode aplikasi | `development` / `production` |
+| `MONGODB_URI` | ❌ | URI MongoDB Atlas (kosong = in-memory) | `mongodb+srv://...` |
+| `JWT_SECRET` | ✅ | Kunci rahasia untuk token login | String acak 64 karakter |
+| `CORS_ORIGIN` | ✅ | Domain frontend yang diizinkan | `https://myportofolio.flutce.app` |
+| `SMTP_HOST` | ❌ | Server SMTP untuk kirim email | `smtp.gmail.com` |
+| `SMTP_PORT` | ❌ | Port SMTP | `587` |
+| `SMTP_USER` | ❌ | Email pengirim | `kamu@gmail.com` |
+| `SMTP_PASS` | ❌ | App Password Gmail (bukan password biasa) | `xxxx xxxx xxxx xxxx` |
+| `EMAIL_FROM` | ❌ | Nama & email pengirim | `kamu@gmail.com` |
+| `SESSION_SECRET` | ❌ | Secret untuk session (jika dipakai) | String acak 32 karakter |
+
+**Cara generate JWT_SECRET:**
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+**Cara buat Gmail App Password:**
+1. Aktifkan 2FA di akun Google kamu
+2. Buka: https://myaccount.google.com/apppasswords
+3. Pilih **"Mail"** → **"Other"** → tulis nama bebas → **Generate**
+4. Salin 16-digit password yang muncul — itulah `SMTP_PASS`
+
+---
+
+## 1. Development — Lokal di Laptop
+
+Panduan lengkap menjalankan project di laptop/komputer lokal untuk pertama kali.
+
+### Langkah 1 — Clone Repository
 
 ```bash
 git clone https://github.com/farizjr1/MyPortofolio.git
 cd MyPortofolio
 ```
 
-### 2. Install semua dependencies
+### Langkah 2 — Install Semua Dependencies
 
 ```bash
 pnpm install
 ```
 
-### 3. Salin file environment
+Perintah ini menginstall semua dependencies untuk seluruh workspace (frontend, backend, dan libraries) sekaligus. Butuh waktu 2-5 menit untuk pertama kali.
+
+### Langkah 3 — Buat File Environment Backend
 
 ```bash
 cp .env.example artifacts/api-server/.env
 ```
 
-Lalu edit file `artifacts/api-server/.env` sesuai kebutuhan (lihat bagian [Konfigurasi Environment](#konfigurasi-environment)).
-
-### 4. Generate kode dari OpenAPI spec
-
-```bash
-pnpm --filter @workspace/api-spec run codegen
-```
-
----
-
-## Konfigurasi Environment
-
-Buat file `.env` di dalam `artifacts/api-server/` berdasarkan `.env.example`:
+Buka file `artifacts/api-server/.env` dan isi nilai-nilainya:
 
 ```env
-# ─── Server ───────────────────────────────────────────────────────
+# ── Server ──────────────────────────────────────────────────────────
 PORT=8080
 NODE_ENV=development
 
-# ─── MongoDB ──────────────────────────────────────────────────────
-# Biarkan kosong untuk pakai in-memory MongoDB (development)
-# Isi dengan URI Atlas untuk production
-MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/portfolio?retryWrites=true&w=majority
+# ── MongoDB ─────────────────────────────────────────────────────────
+# Biarkan kosong untuk pakai in-memory MongoDB (data hilang saat restart)
+# Isi dengan URI Atlas agar data tersimpan permanen
+MONGODB_URI=
 
-# ─── JWT ──────────────────────────────────────────────────────────
+# ── JWT ─────────────────────────────────────────────────────────────
 # Generate dengan: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-JWT_SECRET=ganti-dengan-string-acak-yang-panjang
+JWT_SECRET=isi-dengan-string-acak-64-karakter
 
-# ─── CORS ─────────────────────────────────────────────────────────
+# ── CORS ────────────────────────────────────────────────────────────
 CORS_ORIGIN=http://localhost:5173
 
-# ─── Email (Gmail) ────────────────────────────────────────────────
+# ── Email (opsional, untuk fitur verifikasi email) ───────────────────
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=email-kamu@gmail.com
-SMTP_PASS=app-password-gmail-kamu   # Bukan password Gmail biasa!
+SMTP_PASS=app-password-16-digit
 EMAIL_FROM=email-kamu@gmail.com
-
-# ─── Frontend ─────────────────────────────────────────────────────
-VITE_API_URL=http://localhost:8080/api
 ```
 
-> **Catatan Gmail App Password:**
-> Karena Gmail membutuhkan App Password (bukan password akun biasa):
-> 1. Aktifkan 2FA di akun Google kamu
-> 2. Buka: https://myaccount.google.com/apppasswords
-> 3. Pilih "Mail" → "Other" → Generate
-> 4. Gunakan 16-digit password yang dihasilkan sebagai `SMTP_PASS`
+### Langkah 4 — Buat File Environment Frontend
 
----
+Buat file `artifacts/myportofolio/.env.local`:
 
-## Menjalankan Aplikasi
+```bash
+echo "VITE_API_URL=http://localhost:8080/api
+PORT=5173
+BASE_PATH=/" > artifacts/myportofolio/.env.local
+```
 
-### Development (jalankan keduanya secara bersamaan)
+### Langkah 5 — Jalankan Backend (Terminal 1)
 
-**Terminal 1 — Backend API:**
+Buka terminal pertama, jalankan:
+
 ```bash
 pnpm --filter @workspace/api-server run dev
 ```
-API berjalan di: `http://localhost:8080/api`
 
-**Terminal 2 — Frontend:**
-```bash
-pnpm --filter @workspace/portfolio run dev
+Tunggu sampai muncul pesan:
 ```
-Frontend berjalan di: `http://localhost:5173`
+INFO: Server listening — port: 8080
+INFO: MongoDB connected
+INFO: Profile template seeded
+INFO: Portfolio template seeded
+```
 
-> **Tip:** Saat `MONGODB_URI` tidak diset, backend otomatis menyalakan in-memory MongoDB — tidak perlu install MongoDB lokal untuk development.
+Jika `MONGODB_URI` kosong, akan muncul juga:
+```
+WARN: MONGODB_URI not set — starting in-memory MongoDB for development
+```
+Ini **normal** — app tetap berjalan dengan database sementara di memori.
+
+### Langkah 6 — Jalankan Frontend (Terminal 2)
+
+Buka terminal **kedua** (jangan tutup terminal pertama), jalankan:
+
+```bash
+pnpm --filter @workspace/myportofolio run dev
+```
+
+Tunggu sampai muncul:
+```
+VITE v7.x.x  ready in xxx ms
+➜  Local:   http://localhost:5173/
+```
+
+### Langkah 7 — Buka di Browser
+
+- **Site publik:** http://localhost:5173
+- **Login admin:** http://localhost:5173/flutceadmin
+- **API health check:** http://localhost:8080/api/healthz
+
+### Langkah 8 — Buat Akun Admin Pertama
+
+1. Buka http://localhost:5173/register
+2. Daftar dengan email dan password
+3. Jika SMTP belum dikonfigurasi, akun langsung aktif tanpa verifikasi email
+4. Login via http://localhost:5173/flutceadmin
+5. Kamu akan otomatis diarahkan ke `/admin` dashboard
+
+> **Catatan:** User pertama yang register perlu di-upgrade menjadi admin lewat database. Jalankan perintah ini di terminal baru setelah server berjalan:
+> ```bash
+> # Ganti EMAIL dengan email yang kamu daftar
+> curl -X POST http://localhost:8080/api/auth/login \
+>   -H "Content-Type: application/json" \
+>   -d '{"email":"EMAIL","password":"PASSWORD"}'
+> ```
+> Simpan token JWT-nya, lalu hubungi endpoint admin untuk upgrade role (atau edit langsung di MongoDB jika pakai Atlas).
+
+### Perintah Berguna Lainnya
+
+```bash
+# Typecheck seluruh project
+pnpm run typecheck
+
+# Regenerate kode dari OpenAPI spec (jalankan jika openapi.yaml diubah)
+pnpm --filter @workspace/api-spec run codegen
+
+# Build frontend untuk production
+pnpm --filter @workspace/myportofolio run build
+
+# Build backend untuk production
+pnpm --filter @workspace/api-server run build
+```
 
 ---
 
-## Panduan Penggunaan
+## 2. Testing — di Replit
 
-### 1. Site Publik
+Panduan menggunakan Replit sebagai environment testing sebelum deploy ke production.
 
-Akses `http://localhost:5173` untuk melihat site publik:
+### Langkah 1 — Buka Project di Replit
 
-| Halaman | URL | Deskripsi |
+Project sudah terhubung ke Replit. Buka Replit workspace kamu melalui link yang sudah ada.
+
+### Langkah 2 — Set Secrets di Replit
+
+Klik **ikon gembok (Secrets)** di sidebar kiri Replit, lalu tambahkan secrets berikut satu per satu:
+
+| Secret Key | Nilai |
+|---|---|
+| `JWT_SECRET` | Generate dengan `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
+| `SESSION_SECRET` | Generate dengan perintah yang sama |
+| `MONGODB_URI` | *(Opsional)* URI MongoDB Atlas — kosongkan untuk pakai in-memory |
+| `CORS_ORIGIN` | URL preview Replit kamu (misal: `https://xxx.replit.app`) |
+| `SMTP_USER` | Email Gmail kamu |
+| `SMTP_PASS` | App Password Gmail 16-digit |
+| `EMAIL_FROM` | Email Gmail kamu |
+
+> **Tips:** Untuk mendapat URL Replit kamu, lihat di preview pane — formatnya `https://xxx.replit.dev` atau `https://xxx.replit.app`.
+
+### Langkah 3 — Pastikan Workflows Berjalan
+
+Di Replit, ada 2 workflow yang harus berjalan (bisa dilihat di tab "Workflows" atau console):
+
+**Workflow 1 — API Server:**
+```
+Command: pnpm --filter @workspace/api-server run dev
+```
+
+**Workflow 2 — Frontend:**
+```
+Command: pnpm --filter @workspace/myportofolio run dev
+```
+
+Jika salah satu berstatus **Failed** atau **Stopped**, klik tombol ▶ (Run/Restart) di sebelah workflow tersebut.
+
+### Langkah 4 — Verifikasi API Berjalan
+
+Buka tab baru di Replit, klik **Shell**, jalankan:
+
+```bash
+curl http://localhost:80/api/healthz
+```
+
+Hasilnya harus:
+```json
+{"status":"ok","timestamp":"..."}
+```
+
+### Langkah 5 — Buka Preview
+
+Klik tombol **Open in new tab** di bagian preview pane Replit untuk membuka site di browser terpisah.
+
+- **Site publik:** `https://[nama-replit].replit.dev/`
+- **Login admin:** `https://[nama-replit].replit.dev/flutceadmin`
+
+### Langkah 6 — Test Fitur Utama
+
+Checklist testing sebelum deploy ke production:
+
+- [ ] Halaman Home menampilkan nama dan profil
+- [ ] Halaman About menampilkan pengalaman dan pendidikan
+- [ ] Halaman Portfolio menampilkan daftar proyek
+- [ ] Halaman Contact menampilkan form dan info kontak
+- [ ] Login via `/flutceadmin` berhasil masuk ke dashboard
+- [ ] Admin dapat tambah/edit/hapus proyek di Portfolio Manager
+- [ ] Admin dapat edit profil di Profile Editor
+- [ ] CV Generator dapat menghasilkan PDF yang bisa didownload
+- [ ] URL `/login` menampilkan halaman 404 (bukan halaman login)
+- [ ] Navbar tidak menampilkan tombol Login
+
+### Langkah 7 — Cek Log jika Ada Error
+
+Di Replit Shell:
+```bash
+# Lihat log API server
+cat /tmp/logs/artifactsapi-server_API_Server_*.log | tail -50
+
+# Lihat log frontend
+cat /tmp/logs/artifactsmyportofolio_web_*.log | tail -20
+```
+
+---
+
+## 3. Production — Deploy ke Server
+
+Pilih salah satu dari dua opsi deployment production berikut.
+
+---
+
+### Opsi A: Deploy via Replit (Paling Mudah)
+
+Ini adalah cara tercepat — semua sudah dikonfigurasi di Replit.
+
+#### Langkah 1 — Pastikan Semua Secrets Sudah Diset
+
+Buka **Secrets** di Replit, pastikan semua variable berikut sudah ada dan nilainya benar untuk production:
+
+| Secret | Nilai Production |
+|---|---|
+| `JWT_SECRET` | String acak 64 karakter (berbeda dari development) |
+| `SESSION_SECRET` | String acak 32 karakter (berbeda dari development) |
+| `MONGODB_URI` | URI MongoDB Atlas (wajib untuk data permanen) |
+| `CORS_ORIGIN` | URL domain production kamu (misal: `https://myportofolio.flutce.app`) |
+| `SMTP_USER` | Email Gmail |
+| `SMTP_PASS` | App Password Gmail |
+| `EMAIL_FROM` | Email Gmail |
+
+#### Langkah 2 — Dapatkan MONGODB_URI dari Atlas
+
+Jika belum punya, buat database MongoDB Atlas gratis:
+
+1. Buka https://cloud.mongodb.com dan buat akun gratis
+2. Klik **"Build a Database"** → pilih **M0 Free**
+3. Pilih region terdekat (misal: Singapore)
+4. Klik **"Create"**
+5. Buat username dan password database (ingat passwordnya!)
+6. Di bagian **"Connect from Anywhere"**, klik **"Add My Current IP Address"** lalu tambahkan juga `0.0.0.0/0` agar Replit bisa terhubung
+7. Klik **"Finish and Close"**
+8. Klik **"Connect"** → **"Connect your application"**
+9. Salin URI yang muncul, ganti `<password>` dengan password yang kamu buat
+10. Paste URI tersebut sebagai nilai `MONGODB_URI` di Replit Secrets
+
+#### Langkah 3 — Publish di Replit
+
+1. Klik tombol **"Publish"** (atau "Deploy") di pojok kanan atas Replit
+2. Pilih **"Reserved VM"** atau **"Autoscale"** sesuai kebutuhan
+3. Klik **"Deploy"**
+4. Tunggu proses build selesai (biasanya 2-5 menit)
+5. Replit akan memberikan URL production: `https://[nama].replit.app`
+
+#### Langkah 4 — Update CORS_ORIGIN
+
+Setelah dapat URL production:
+1. Buka Replit Secrets
+2. Update `CORS_ORIGIN` dengan URL production yang baru (misal: `https://myportofolio.replit.app`)
+3. Restart deployment
+
+#### Langkah 5 — Verifikasi Production
+
+```bash
+# Test API production
+curl https://[nama].replit.app/api/healthz
+
+# Test halaman publik
+curl -I https://[nama].replit.app/
+```
+
+---
+
+### Opsi B: Deploy Manual ke Vercel (Frontend) + Railway (Backend)
+
+Cara ini memisahkan frontend dan backend ke platform yang berbeda — lebih fleksibel untuk skala besar.
+
+---
+
+#### BAGIAN 1 — Setup MongoDB Atlas (Database)
+
+Lakukan ini **sebelum** deploy backend maupun frontend.
+
+1. Buka https://cloud.mongodb.com → buat akun
+2. Klik **"Build a Database"** → pilih **M0 Free**
+3. Pilih region **Singapore** (untuk latency rendah dari Indonesia)
+4. Buat **Database User**:
+   - Username: `fariz-admin` (atau bebas)
+   - Password: generate password kuat, **simpan di tempat aman**
+5. Di **Network Access** → **Add IP Address** → ketik `0.0.0.0/0` → Confirm
+6. Klik **Connect** → **Connect your application** → salin URI
+7. URI formatnya: `mongodb+srv://fariz-admin:PASSWORD@cluster0.xxxxx.mongodb.net/portfolio?retryWrites=true&w=majority`
+8. **Simpan URI ini** — akan dipakai di langkah berikutnya
+
+---
+
+#### BAGIAN 2 — Deploy Backend ke Railway
+
+1. Buka https://railway.app → **Sign up with GitHub**
+2. Klik **"New Project"** → **"Deploy from GitHub repo"**
+3. Pilih repository **farizjr1/MyPortofolio**
+4. Railway akan otomatis mendeteksi project. Jika diminta, set:
+   - **Root Directory:** `artifacts/api-server`
+   - **Build Command:** `pnpm install && pnpm run build`
+   - **Start Command:** `pnpm run start`
+5. Klik tab **"Variables"** → tambahkan semua environment variables:
+
+   | Key | Value |
+   |---|---|
+   | `PORT` | `8080` |
+   | `NODE_ENV` | `production` |
+   | `MONGODB_URI` | URI Atlas dari Bagian 1 |
+   | `JWT_SECRET` | String acak 64 karakter |
+   | `CORS_ORIGIN` | *(isi setelah deploy frontend — update nanti)* |
+   | `SMTP_HOST` | `smtp.gmail.com` |
+   | `SMTP_PORT` | `587` |
+   | `SMTP_USER` | email Gmail kamu |
+   | `SMTP_PASS` | App Password Gmail 16-digit |
+   | `EMAIL_FROM` | email Gmail kamu |
+
+6. Klik **"Deploy"** — tunggu hingga status **"Success"**
+7. Di tab **"Settings"** → **"Networking"** → klik **"Generate Domain"**
+8. **Catat URL Railway** — formatnya: `https://myportofolio-api.railway.app`
+9. Verifikasi backend berjalan:
+   ```bash
+   curl https://myportofolio-api.railway.app/api/healthz
+   ```
+   Harus mengembalikan: `{"status":"ok",...}`
+
+---
+
+#### BAGIAN 3 — Deploy Frontend ke Vercel
+
+1. Buka https://vercel.com → **Sign up with GitHub**
+2. Klik **"Add New..."** → **"Project"**
+3. Klik **"Import"** di sebelah repository **farizjr1/MyPortofolio**
+4. Di halaman konfigurasi, set:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** klik **Edit** → ketik `artifacts/myportofolio`
+   - **Build Command:** `pnpm run build`
+   - **Output Directory:** `dist/public`
+   - **Install Command:** `pnpm install`
+5. Di bagian **"Environment Variables"**, tambahkan:
+
+   | Key | Value |
+   |---|---|
+   | `VITE_API_URL` | URL Railway dari Bagian 2, misal: `https://myportofolio-api.railway.app/api` |
+   | `PORT` | `3000` |
+   | `BASE_PATH` | `/` |
+   | `NODE_ENV` | `production` |
+
+6. Klik **"Deploy"** — tunggu hingga selesai (2-5 menit)
+7. Vercel akan memberikan URL: `https://myportofolio.vercel.app` (atau custom domain)
+8. Salin URL ini
+
+---
+
+#### BAGIAN 4 — Update CORS di Backend
+
+Setelah frontend deploy dan dapat URL Vercel:
+
+1. Buka Railway dashboard → project kamu → tab **Variables**
+2. Update nilai `CORS_ORIGIN`:
+   ```
+   CORS_ORIGIN=https://myportofolio.vercel.app
+   ```
+   Atau jika pakai custom domain:
+   ```
+   CORS_ORIGIN=https://myportofolio.flutce.app
+   ```
+3. Railway otomatis restart backend setelah variable diupdate
+4. Tunggu 1-2 menit
+
+---
+
+#### BAGIAN 5 — Setup Custom Domain (Opsional)
+
+Jika kamu punya domain `myportofolio.flutce.app`:
+
+**Di Vercel:**
+1. Buka dashboard Vercel → project → tab **"Domains"**
+2. Ketik `myportofolio.flutce.app` → klik **"Add"**
+3. Vercel akan tampilkan DNS record yang perlu ditambahkan
+
+**Di DNS provider domain kamu:**
+1. Buka panel DNS (Cloudflare, Niagahoster, dll)
+2. Tambahkan record sesuai instruksi Vercel:
+   - Tipe: `CNAME`
+   - Name: `myportofolio`
+   - Value: `cname.vercel-dns.com`
+3. Tunggu propagasi DNS (5 menit - 48 jam)
+
+**Update CORS setelah custom domain aktif:**
+- Di Railway, ubah `CORS_ORIGIN` menjadi `https://myportofolio.flutce.app`
+
+---
+
+#### BAGIAN 6 — Setup CI/CD Otomatis via GitHub Actions
+
+Agar setiap push ke `main` otomatis deploy ke Vercel:
+
+1. Buka Vercel dashboard → **Settings** → **Tokens** → **"Create"**
+   - Name: `GitHub Actions`
+   - Scope: `Full Account`
+   - Salin token yang muncul
+
+2. Buka Vercel dashboard → project → **Settings** → **General**
+   - Catat **Project ID** dan **Team ID (Org ID)**
+
+3. Buka GitHub repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
+   Tambahkan 3 secrets:
+
+   | Secret Name | Nilai |
+   |---|---|
+   | `VERCEL_TOKEN` | Token dari langkah 1 |
+   | `VERCEL_ORG_ID` | Team ID / Org ID dari Vercel |
+   | `VERCEL_PROJECT_ID` | Project ID dari Vercel |
+   | `VITE_API_URL` | URL Railway API: `https://myportofolio-api.railway.app/api` |
+
+4. Sekarang setiap kamu push ke branch `main`, GitHub Actions otomatis build dan deploy frontend ke Vercel. Cek status di tab **"Actions"** di GitHub repository.
+
+---
+
+#### BAGIAN 7 — Verifikasi Production Lengkap
+
+Setelah semua deploy, test checklist berikut:
+
+```bash
+# 1. API backend merespons
+curl https://myportofolio-api.railway.app/api/healthz
+
+# 2. Data profil bisa diambil (harus muncul nama Fariz)
+curl https://myportofolio-api.railway.app/api/profile
+
+# 3. Daftar portfolio
+curl https://myportofolio-api.railway.app/api/portfolio
+```
+
+Di browser:
+- [ ] `https://myportofolio.flutce.app` — tampil halaman Home
+- [ ] `https://myportofolio.flutce.app/about` — tampil pengalaman & pendidikan
+- [ ] `https://myportofolio.flutce.app/portfolio` — tampil daftar proyek
+- [ ] `https://myportofolio.flutce.app/flutceadmin` — tampil form login
+- [ ] `https://myportofolio.flutce.app/login` — tampil halaman 404
+- [ ] Navbar tidak ada tombol Login
+
+---
+
+## Panduan Penggunaan Aplikasi
+
+### Akses Admin Dashboard
+
+1. Buka `/flutceadmin` di browser (URL ini tidak ada di navbar — hanya kamu yang tahu)
+2. Login dengan email dan password admin
+3. Setelah login, kamu diarahkan ke `/admin`
+
+### Fitur Admin Dashboard
+
+| Menu | Fungsi |
+|---|---|
+| **Dashboard** | Ringkasan statistik semua data |
+| **Portfolio** | Tambah, edit, hapus proyek portfolio |
+| **Content** | Edit konten teks halaman publik |
+| **Profile** | Edit info profil (nama, bio, foto, sosial media) |
+| **CV Manager** | Kelola data CV |
+| **CV Generator** | Isi form → preview → download PDF |
+
+### URL Penting
+
+| URL | Fungsi | Akses |
 |---|---|---|
-| **Home** | `/` | Hero section dengan nama, tagline, dan CTA |
-| **About** | `/about` | Deskripsi diri, timeline pengalaman & pendidikan |
-| **Portfolio** | `/portfolio` | Grid proyek dengan filter kategori |
-| **Contact** | `/contact` | Form kontak + info sosial media |
-
-Semua konten halaman publik diambil secara dinamis dari API dan bisa dikelola melalui Admin Dashboard.
-
----
-
-### 2. Login & Register
-
-#### Daftar Akun Baru
-1. Buka `/register`
-2. Isi nama, email, dan password
-3. Cek email untuk link verifikasi (jika SMTP dikonfigurasi)
-4. Klik link verifikasi → akun aktif
-
-#### Login
-1. Buka `/login`
-2. Masukkan email dan password
-3. Setelah login, pengguna dengan role **admin** otomatis diarahkan ke dashboard
-
-#### Lupa Password
-1. Buka `/forgot-password`
-2. Masukkan email terdaftar
-3. Cek email → klik link reset
-4. Masukkan password baru di `/reset-password?token=...`
-
-> **Buat akun admin pertama:** Setelah register, update role di database MongoDB secara langsung, atau gunakan endpoint API: `PATCH /api/auth/users/:id/role` dengan body `{"role": "admin"}` menggunakan token admin yang sudah ada.
-
----
-
-### 3. Admin Dashboard
-
-Akses `/admin` setelah login dengan akun berole **admin**.
-
-#### a. Dashboard Overview (`/admin`)
-- Statistik ringkasan: jumlah proyek, konten, pesan masuk
-- Navigasi cepat ke semua modul
-
-#### b. Portfolio Manager (`/admin/portfolio`)
-Kelola daftar proyek yang tampil di halaman Portfolio publik:
-
-1. Klik **"Tambah Proyek"** untuk menambah proyek baru
-2. Isi form:
-   - **Judul** — nama proyek
-   - **Deskripsi** — penjelasan singkat proyek
-   - **Kategori** — (misal: Web App, Data Analysis, Accounting)
-   - **Tags** — teknologi yang digunakan
-   - **URL Demo** — link live demo (opsional)
-   - **URL GitHub** — link source code (opsional)
-   - **Gambar** — URL thumbnail proyek
-   - **Status** — Published / Draft
-3. Klik **Simpan** — proyek langsung tampil di halaman Portfolio
-
-Untuk **edit** atau **hapus**, klik ikon pensil/tempat sampah di baris proyek.
-
-#### c. Content CMS (`/admin/content`)
-Kelola konten teks untuk semua halaman publik (About, Home tagline, dll):
-
-1. Pilih halaman/section yang ingin diedit
-2. Edit teks langsung di editor
-3. Klik **Simpan** — perubahan langsung live di site publik
-
-#### d. Profile Editor (`/admin/profile`)
-Edit informasi profil yang tampil di site:
-
-- Nama lengkap, tagline, bio
-- Foto profil (URL)
-- Link GitHub, LinkedIn, email
-- Skills & keahlian
-
-#### e. CV Manager (`/admin/cv`)
-Kelola data yang digunakan untuk generate CV (lihat bagian [ATS CV Generator](#4-ats-cv-generator)).
-
----
-
-### 4. ATS CV Generator
-
-Akses `/admin/cv` untuk membuat CV dalam format PDF yang ATS-friendly.
-
-#### Cara Generate CV:
-
-**Langkah 1 — Isi Data Personal**
-- Nama lengkap, email, nomor telepon
-- Kota/lokasi, LinkedIn URL, GitHub URL
-- Ringkasan profil (professional summary)
-
-**Langkah 2 — Pengalaman Kerja**
-- Klik **"Tambah Pengalaman"**
-- Isi: nama perusahaan, posisi, periode, deskripsi tugas
-- Tambahkan sebanyak yang diperlukan
-
-**Langkah 3 — Pendidikan**
-- Klik **"Tambah Pendidikan"**
-- Isi: nama institusi, jurusan, gelar, tahun lulus, IPK (opsional)
-
-**Langkah 4 — Skills**
-- Tambahkan skill teknis dan soft skill
-- Skills ditampilkan dalam format yang mudah di-parse ATS
-
-**Langkah 5 — Sertifikasi & Penghargaan** (opsional)
-- Tambahkan sertifikasi profesional
-- Tambahkan penghargaan atau pencapaian
-
-**Langkah 6 — Preview & Download**
-- Klik **"Preview CV"** untuk melihat tampilan sebelum download
-- Klik **"Download PDF"** untuk mengunduh CV
-- File PDF di-generate langsung di browser (tidak perlu server) menggunakan `@react-pdf/renderer`
-
-> **Tips ATS:** Gunakan kata kunci yang relevan dengan posisi yang dilamar. CV ini menggunakan format hitam-putih yang bersih dan satu kolom agar mudah dibaca oleh sistem ATS perusahaan.
+| `/` | Halaman Home | Publik |
+| `/about` | Halaman About | Publik |
+| `/portfolio` | Halaman Portfolio | Publik |
+| `/contact` | Halaman Contact | Publik |
+| `/flutceadmin` | Halaman Login | **Rahasia** |
+| `/admin` | Dashboard Admin | Setelah login |
+| `/register` | Daftar akun baru | Tersembunyi |
 
 ---
 
 ## API Reference
 
-Base URL: `http://localhost:8080/api`
+Base URL:
+- Development: `http://localhost:8080/api`
+- Production: `https://myportofolio-api.railway.app/api`
 
-### Autentikasi
+### Auth
 | Method | Endpoint | Deskripsi | Auth |
 |---|---|---|---|
 | `POST` | `/auth/register` | Daftar akun baru | — |
-| `POST` | `/auth/login` | Login, mendapat JWT | — |
-| `GET` | `/auth/me` | Info user yang sedang login | ✅ |
-| `POST` | `/auth/logout` | Logout | ✅ |
+| `POST` | `/auth/login` | Login, dapat JWT token | — |
+| `GET` | `/auth/me` | Info user yang sedang login | ✅ JWT |
+| `POST` | `/auth/logout` | Logout | ✅ JWT |
 | `POST` | `/auth/forgot-password` | Kirim email reset password | — |
 | `POST` | `/auth/reset-password` | Reset password dengan token | — |
 | `GET` | `/auth/verify-email` | Verifikasi email | — |
@@ -338,13 +700,13 @@ Base URL: `http://localhost:8080/api`
 ### Profile
 | Method | Endpoint | Deskripsi | Auth |
 |---|---|---|---|
-| `GET` | `/profile` | Ambil data profil publik | — |
+| `GET` | `/profile` | Data profil publik | — |
 | `PUT` | `/profile` | Update profil | ✅ Admin |
 
 ### Portfolio
 | Method | Endpoint | Deskripsi | Auth |
 |---|---|---|---|
-| `GET` | `/portfolio` | Daftar semua proyek (publik: hanya published) | — |
+| `GET` | `/portfolio` | Daftar semua proyek | — |
 | `POST` | `/portfolio` | Tambah proyek baru | ✅ Admin |
 | `GET` | `/portfolio/:id` | Detail satu proyek | — |
 | `PUT` | `/portfolio/:id` | Update proyek | ✅ Admin |
@@ -355,13 +717,13 @@ Base URL: `http://localhost:8080/api`
 |---|---|---|---|
 | `GET` | `/content` | Semua konten halaman | — |
 | `GET` | `/content/:section` | Konten per section | — |
-| `PUT` | `/content/:section` | Update konten section | ✅ Admin |
+| `PUT` | `/content/:section` | Update konten | ✅ Admin |
 
 ### CV Data
 | Method | Endpoint | Deskripsi | Auth |
 |---|---|---|---|
-| `GET` | `/cv` | Ambil data CV tersimpan | ✅ |
-| `PUT` | `/cv` | Simpan/update data CV | ✅ |
+| `GET` | `/cv` | Data CV tersimpan | ✅ JWT |
+| `PUT` | `/cv` | Simpan/update data CV | ✅ JWT |
 
 ### Health Check
 | Method | Endpoint | Deskripsi |
@@ -370,109 +732,115 @@ Base URL: `http://localhost:8080/api`
 
 ---
 
-## Deploy ke Produksi
+## Arsitektur & Alur Data
 
-### Opsi 1: Replit (Paling Mudah)
-Proyek ini sudah berjalan di Replit. Klik tombol **Publish** di Replit untuk deploy ke domain `.replit.app`.
-
-Sebelum publish, set environment variables berikut di Replit Secrets:
-- `MONGODB_URI` — URI MongoDB Atlas
-- `JWT_SECRET` — string acak panjang
-- `SMTP_USER`, `SMTP_PASS` — kredensial Gmail
-- `SESSION_SECRET` — string acak untuk session
-
-### Opsi 2: Vercel + Railway/Render (via GitHub Actions)
-
-File `.github/workflows/deploy.yml` sudah menyiapkan CI/CD otomatis. Setup:
-
-**Backend (Railway atau Render):**
-1. Buat akun di [Railway](https://railway.app) atau [Render](https://render.com)
-2. Connect repository GitHub
-3. Set environment variables (sama seperti `.env.example`)
-4. Deploy `artifacts/api-server`
-
-**Frontend (Vercel):**
-1. Buat akun di [Vercel](https://vercel.com)
-2. Import repository GitHub
-3. Set Root Directory: `artifacts/portfolio`
-4. Set environment variable: `VITE_API_URL=https://your-api-url.railway.app/api`
-5. Deploy
-
-**GitHub Secrets yang diperlukan** (untuk Actions):
 ```
-VERCEL_TOKEN         # Token dari dashboard Vercel
-VERCEL_ORG_ID        # ID organisasi Vercel
-VERCEL_PROJECT_ID    # ID project Vercel
+Browser (React + Vite)
+    │
+    ├── Static files (HTML/CSS/JS)
+    │       └── Vercel CDN / Replit
+    │
+    └── API Calls (/api/...)
+            │
+            ▼
+    Express Backend (Node.js)
+            │
+            ├── JWT Middleware (verifikasi token)
+            ├── Route Handlers
+            └── MongoDB (Atlas / In-memory)
 ```
 
-Panduan lengkap ada di [ENV_MANAGEMENT.md](./ENV_MANAGEMENT.md).
-
----
-
-## Git Workflow
-
-Proyek ini menggunakan Git Flow. Panduan lengkap ada di [GIT_WORKFLOW.md](./GIT_WORKFLOW.md).
-
-**Ringkasan singkat:**
-
-```bash
-# Buat fitur baru
-git checkout -b feature/nama-fitur develop
-
-# Setelah selesai, merge ke develop
-git checkout develop
-git merge feature/nama-fitur
-
-# Release ke production
-git checkout main
-git merge develop
-git tag v1.0.0
-git push origin main --tags
+**Alur Login:**
 ```
-
-**Branch utama:**
-- `main` — production-ready, auto-deploy ke Vercel
-- `develop` — staging/integration
-- `feature/*` — fitur baru
-- `hotfix/*` — perbaikan bug critical di production
+1. User buka /flutceadmin
+2. Isi email + password → POST /api/auth/login
+3. Backend verifikasi → generate JWT token (7 hari)
+4. Token disimpan di localStorage browser
+5. Setiap request API berikutnya kirim token di header:
+   Authorization: Bearer <token>
+6. Backend verifikasi token → izinkan atau tolak
+```
 
 ---
 
 ## Troubleshooting
 
-### Backend tidak bisa start
+### Backend gagal start — port sudah dipakai
 ```
 Error: listen EADDRINUSE: address already in use :::8080
 ```
-Port 8080 sudah dipakai proses lain. Matikan proses lama:
+**Solusi:**
 ```bash
-lsof -ti:8080 | xargs kill -9
+# Temukan dan matikan proses yang menggunakan port 8080
+kill $(lsof -ti:8080) 2>/dev/null
+# Lalu start ulang backend
 ```
 
-### MongoDB connection error
-Jika `MONGODB_URI` diset tapi koneksi gagal:
-- Pastikan IP address kamu sudah di-whitelist di MongoDB Atlas (Network Access → Add IP Address)
-- Cek apakah username/password di URI sudah benar
-- Biarkan `MONGODB_URI` kosong untuk pakai in-memory MongoDB saat development
+### Koneksi MongoDB gagal
+```
+Error: MongoServerSelectionError: connection timed out
+```
+**Solusi:**
+1. Pastikan IP kamu sudah di-whitelist di MongoDB Atlas → **Network Access** → **Add IP Address** → `0.0.0.0/0`
+2. Pastikan username dan password di URI benar (perhatikan karakter khusus — gunakan URL encode)
+3. Coba biarkan `MONGODB_URI` kosong untuk pakai in-memory saat development
 
-### Push ke GitHub gagal (403)
-- Pastikan Personal Access Token (Classic) memiliki scope: `repo` dan `workflow`
-- Buat token baru di: https://github.com/settings/tokens/new
+### Push ke GitHub gagal — 403
+**Penyebab:** Personal Access Token tidak punya scope yang cukup.
+**Solusi:**
+1. Buka https://github.com/settings/tokens
+2. Edit token → centang scope: `repo` ✅ dan `workflow` ✅
+3. Salin token baru → update di Replit Secrets
 
 ### Email verifikasi tidak terkirim
-- Pastikan `SMTP_USER` dan `SMTP_PASS` sudah benar
-- `SMTP_PASS` harus berupa **App Password** Google, bukan password akun biasa
-- Aktifkan "Less secure app access" atau gunakan App Password di: https://myaccount.google.com/apppasswords
+**Solusi:**
+1. Pastikan `SMTP_PASS` adalah **App Password** Google (16 digit), bukan password akun Gmail biasa
+2. Pastikan akun Google sudah aktifkan 2FA
+3. Buat App Password baru di: https://myaccount.google.com/apppasswords
 
-### PDF tidak bisa di-download
-- Pastikan browser tidak memblokir popup/download
-- Coba di browser lain (Chrome/Firefox terbaru)
-- Pastikan semua field wajib di form CV sudah terisi
+### CORS error di browser
+```
+Access to XMLHttpRequest blocked by CORS policy
+```
+**Solusi:**
+1. Pastikan nilai `CORS_ORIGIN` di backend **sama persis** dengan URL frontend (termasuk `https://` dan tanpa trailing slash)
+2. Contoh benar: `CORS_ORIGIN=https://myportofolio.flutce.app`
+3. Contoh salah: `CORS_ORIGIN=https://myportofolio.flutce.app/` (ada slash di akhir)
 
-### Halaman admin tidak bisa diakses
-- Pastikan sudah login dengan akun yang memiliki role `admin`
-- Cek token JWT di browser: DevTools → Application → Local Storage
-- Jika token expired, login ulang
+### Data hilang setelah restart
+**Penyebab:** Menggunakan in-memory MongoDB (tanpa `MONGODB_URI`).
+**Solusi:** Set `MONGODB_URI` dengan URI dari MongoDB Atlas. Data template akan diisi otomatis pertama kali.
+
+### PDF CV tidak bisa didownload
+**Solusi:**
+1. Pastikan browser tidak memblokir popup atau download
+2. Coba di Chrome versi terbaru
+3. Pastikan semua field wajib di form CV sudah terisi (nama, email, minimal 1 pengalaman)
+
+### Halaman `/flutceadmin` tidak bisa diakses setelah deploy
+**Solusi:** Pastikan konfigurasi SPA rewrite sudah aktif di Vercel. Cek file `vercel.json` atau pastikan konfigurasi rewrite di deployment sudah mengarahkan semua request ke `index.html`.
+
+---
+
+## Git Workflow
+
+Panduan lengkap ada di [GIT_WORKFLOW.md](./GIT_WORKFLOW.md). Ringkasan:
+
+```bash
+# Fitur baru
+git checkout -b feature/nama-fitur
+# ... kerjakan fitur ...
+git add .
+git commit -m "feat: deskripsi fitur"
+git push origin feature/nama-fitur
+# Buat Pull Request ke main di GitHub
+
+# Hotfix production
+git checkout -b hotfix/nama-bug
+# ... fix bug ...
+git commit -m "fix: deskripsi bug"
+git push origin hotfix/nama-bug
+```
 
 ---
 
@@ -483,5 +851,5 @@ MIT License — bebas digunakan dan dimodifikasi untuk keperluan pribadi maupun 
 ---
 
 <div align="center">
-  Dibuat dengan ❤️ oleh <strong>Fariz Jelang Ramadhan</strong>
+  Dibuat oleh <strong>Fariz Jelang Ramadhan</strong>
 </div>
