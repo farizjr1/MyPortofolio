@@ -11,7 +11,7 @@ Full-stack professional portfolio application with Accounting CMS and ATS CV Gen
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
 
-### Frontend (artifacts/portfolio)
+### Frontend (artifacts/myportofolio)
 - React 19 + Vite + TypeScript
 - Tailwind CSS + Shadcn/UI + Framer Motion
 - TanStack Query (React Query)
@@ -93,7 +93,7 @@ Full-stack professional portfolio application with Accounting CMS and ATS CV Gen
 - `artifacts/api-server/src/middlewares/auth.ts` — JWT middleware + RBAC
 - `artifacts/api-server/src/models/` — Mongoose schemas
 - `artifacts/api-server/src/routes/` — Route handlers
-- `artifacts/portfolio/src/` — React frontend
+- `artifacts/myportofolio/src/` — React frontend
 - `lib/api-spec/openapi.yaml` — API contract (source of truth)
 - `lib/api-client-react/src/generated/api.ts` — Generated React Query hooks
 - `.env.example` — Environment variable template

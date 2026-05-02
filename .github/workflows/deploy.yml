@@ -28,7 +28,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build frontend
-        run: pnpm --filter @workspace/portfolio run build
+        run: pnpm --filter @workspace/myportofolio run build
         env:
           NODE_ENV: production
           BASE_PATH: /
@@ -41,5 +41,5 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: artifacts/portfolio/dist/public
+          working-directory: artifacts/myportofolio/dist/public
           vercel-args: "--prod"

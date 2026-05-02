@@ -426,7 +426,7 @@ importers:
         specifier: 'catalog:'
         version: 3.25.76
 
-  artifacts/portfolio:
+  artifacts/myportofolio:
     dependencies:
       '@react-pdf/renderer':
         specifier: ^4.5.1
