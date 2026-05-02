@@ -1,116 +1,289 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useGetProfile } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronDown, Github, Linkedin, Mail } from "lucide-react";
+import { Github, Linkedin, Mail } from "lucide-react";
+
+const TITLES = [
+  "Web Developer",
+  "Full-stack Engineer",
+  "Accounting Professional",
+  "Tech Enthusiast",
+];
+const PERIOD = 2000;
+
+function useTypewriter(toRotate: string[], period: number) {
+  const [txt, setTxt] = useState("");
+  const state = useRef({
+    loopNum: 0,
+    isDeleting: false,
+    txt: "",
+  });
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    function tick() {
+      const s = state.current;
+      const i = s.loopNum % toRotate.length;
+      const fullTxt = toRotate[i];
+
+      if (s.isDeleting) {
+        s.txt = fullTxt.substring(0, s.txt.length - 1);
+      } else {
+        s.txt = fullTxt.substring(0, s.txt.length + 1);
+      }
+      setTxt(s.txt);
+
+      let delta = 200 - Math.random() * 100;
+      if (s.isDeleting) delta /= 2;
+
+      if (!s.isDeleting && s.txt === fullTxt) {
+        s.isDeleting = true;
+        delta = period;
+      } else if (s.isDeleting && s.txt === "") {
+        s.isDeleting = false;
+        s.loopNum++;
+        delta = 500;
+      }
+
+      timeoutRef.current = setTimeout(tick, delta);
+    }
+
+    timeoutRef.current = setTimeout(tick, 600);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [toRotate, period]);
+
+  return txt;
+}
+
+function AvatarRing({ src, name }: { src?: string; name?: string }) {
+  const initials = name
+    ? name
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+    : "FJ";
+
+  return (
+    <div className="relative flex items-center justify-center">
+      {/* Outer glow pulse */}
+      <motion.div
+        className="absolute rounded-full"
+        style={{
+          width: "calc(100% + 24px)",
+          height: "calc(100% + 24px)",
+          background:
+            "radial-gradient(circle, rgba(253,230,138,0.18) 0%, transparent 70%)",
+        }}
+        animate={{ scale: [1, 1.06, 1], opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Yellow ring border */}
+      <div
+        className="relative rounded-full p-[3px]"
+        style={{
+          background:
+            "linear-gradient(135deg, #FDE68A 0%, #F59E0B 40%, #FDE68A 70%, #FBBF24 100%)",
+          boxShadow:
+            "0 0 24px rgba(253,230,138,0.45), 0 0 48px rgba(253,230,138,0.2), inset 0 0 12px rgba(253,230,138,0.1)",
+        }}
+      >
+        {/* Inner dark ring gap */}
+        <div className="rounded-full p-[3px] bg-[#121212]">
+          {/* Avatar */}
+          <div className="h-40 w-40 md:h-48 md:w-48 rounded-full overflow-hidden bg-zinc-800 flex items-center justify-center">
+            {src ? (
+              <img
+                src={src}
+                alt={name || "Fariz"}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-4xl font-bold text-primary select-none">
+                {initials}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { data: profile } = useGetProfile();
+  const txt = useTypewriter(TITLES, PERIOD);
 
-  // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const displayName = profile?.name || "Fariz Jelang Ramadhan";
+
   return (
-    <div className="flex flex-col items-center">
-      {/* Hero Section */}
-      <section className="w-full min-h-[90vh] flex flex-col justify-center items-center relative px-4 text-center">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(253,230,138,0.03)_0%,rgba(0,0,0,0)_50%)] pointer-events-none"></div>
-        
+    <div className="flex flex-col">
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="relative w-full min-h-[92vh] flex flex-col items-center justify-center px-4 text-center overflow-hidden">
+        {/* Background radial glow */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 30%, rgba(253,230,138,0.06) 0%, transparent 70%)",
+          }}
+        />
+
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="z-10 max-w-4xl mx-auto flex flex-col items-center"
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="relative z-10 flex flex-col items-center gap-5"
         >
-          {profile?.avatarUrl && (
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mb-8 rounded-full p-1 border border-border bg-card/50 overflow-hidden h-32 w-32 md:h-40 md:w-40"
-            >
-              <img 
-                src={profile.avatarUrl} 
-                alt={profile.name || "Fariz"} 
-                className="w-full h-full object-cover rounded-full grayscale hover:grayscale-0 transition-all duration-500"
+          {/* Avatar with glowing ring */}
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.15, duration: 0.5, ease: "easeOut" }}
+          >
+            <AvatarRing
+              src={profile?.avatarUrl || undefined}
+              name={displayName}
+            />
+          </motion.div>
+
+          {/* Hello World line */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="text-sm md:text-base text-primary font-medium tracking-wide"
+          >
+            Hello World, I'm
+          </motion.p>
+
+          {/* Name */}
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, duration: 0.5 }}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight max-w-xl"
+          >
+            {displayName}
+          </motion.h1>
+
+          {/* Typewriter */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="h-9 flex items-center justify-center"
+          >
+            <span className="text-xl md:text-2xl font-semibold text-primary">
+              {txt}
+              <span
+                className="inline-block w-[2px] h-6 bg-primary ml-[2px] align-middle animate-[blink_0.8s_step-end_infinite]"
+                style={{ verticalAlign: "middle" }}
               />
-            </motion.div>
-          )}
-          
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-4 text-foreground">
-            Hi, I'm <span className="text-primary inline-block">{profile?.name || "Fariz Jelang Ramadhan"}</span>
-          </h1>
-          
-          <h2 className="text-xl md:text-2xl text-muted-foreground font-light mb-8 max-w-2xl mx-auto leading-relaxed">
-            {profile?.title || "Professional Developer & Accounting Specialist"}
-          </h2>
-          
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <Link href="/portfolio">
-              <Button size="lg" className="h-12 px-8 text-base group">
-                View My Work
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
-            <Link href="/contact">
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base">
-                Get in Touch
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="mt-12 flex items-center gap-6">
+            </span>
+          </motion.div>
+
+          {/* Welcome line */}
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.75, duration: 0.5 }}
+            className="text-sm md:text-base text-muted-foreground max-w-sm"
+          >
+            Welcome to my personal website.{" "}
+            <span role="img" aria-label="wave">
+              👋
+            </span>
+          </motion.p>
+
+          {/* Social links */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.5 }}
+            className="flex items-center gap-4 mt-2"
+          >
             {profile?.githubUrl && (
-              <a href={profile.githubUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                <Github className="h-6 w-6" />
-                <span className="sr-only">GitHub</span>
+              <a
+                href={profile.githubUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center justify-center h-10 w-10 rounded-full border border-white/10 bg-white/5 text-muted-foreground transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+              >
+                <Github className="h-4 w-4" />
               </a>
             )}
             {profile?.linkedinUrl && (
-              <a href={profile.linkedinUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                <Linkedin className="h-6 w-6" />
-                <span className="sr-only">LinkedIn</span>
+              <a
+                href={profile.linkedinUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center justify-center h-10 w-10 rounded-full border border-white/10 bg-white/5 text-muted-foreground transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+              >
+                <Linkedin className="h-4 w-4" />
               </a>
             )}
             {profile?.email && (
-              <a href={`mailto:${profile.email}`} className="text-muted-foreground hover:text-primary transition-colors">
-                <Mail className="h-6 w-6" />
-                <span className="sr-only">Email</span>
+              <a
+                href={`mailto:${profile.email}`}
+                className="group flex items-center justify-center h-10 w-10 rounded-full border border-white/10 bg-white/5 text-muted-foreground transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+              >
+                <Mail className="h-4 w-4" />
               </a>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-muted-foreground"
-        >
-          <ChevronDown className="h-6 w-6" />
+          {/* CTA buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.5 }}
+            className="flex flex-col sm:flex-row gap-3 mt-3"
+          >
+            <Link href="/portfolio">
+              <button className="h-11 px-7 rounded-full bg-primary text-primary-foreground text-sm font-semibold transition-all duration-200 hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 active:scale-95">
+                Lihat Portfolio
+              </button>
+            </Link>
+            <Link href="/contact">
+              <button className="h-11 px-7 rounded-full border border-white/10 bg-white/5 text-sm font-medium text-muted-foreground backdrop-blur-sm transition-all duration-200 hover:border-primary/30 hover:text-primary hover:bg-primary/8 active:scale-95">
+                Hubungi Saya
+              </button>
+            </Link>
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Brief Intro Section */}
-      <section className="w-full py-24 bg-card/30 border-y border-border/50">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
+      {/* ── About snippet ─────────────────────────────────── */}
+      <section className="w-full py-20 bg-white/[0.02] border-t border-border/30">
+        <div className="container max-w-3xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h3 className="text-2xl font-semibold mb-6 text-primary">About Me</h3>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8">
-              {profile?.bio || "I bridge the gap between complex technical requirements and elegant business solutions. With a unique background in both development and accounting, I build systems that are not only performant but also perfectly aligned with business objectives."}
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary/70 mb-3">
+              About Me
+            </p>
+            <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+              {profile?.bio
+                ? profile.bio.split("\n")[0]
+                : "Saya profesional muda dengan keahlian di bidang akuntansi dan pengembangan teknologi. Saya percaya kombinasi keduanya adalah kunci solusi bisnis yang efektif di era digital."}
             </p>
             <Link href="/about">
-              <Button variant="link" className="text-primary hover:text-primary/80">
-                Read Full Story <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <button className="mt-6 text-sm text-primary/70 hover:text-primary transition-colors underline underline-offset-4 decoration-dotted">
+                Selengkapnya →
+              </button>
             </Link>
           </motion.div>
         </div>
