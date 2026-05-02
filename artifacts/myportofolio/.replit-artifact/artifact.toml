@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Portfolio & CMS"
+title = "MyPortofolio"
 version = "1.0.0"
 id = "artifacts/portfolio"
 router = "path"
@@ -12,14 +12,14 @@ version = "1.0.0"
 [[services]]
 name = "web"
 paths = [ "/" ]
-localPort = 21113
+localPort = 21114
 
 [services.development]
-run = "pnpm --filter @workspace/portfolio run dev"
+run = "pnpm --filter @workspace/myportofolio run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/portfolio", "run", "build" ]
-publicDir = "artifacts/portfolio/dist/public"
+build = [ "pnpm", "--filter", "@workspace/myportofolio", "run", "build" ]
+publicDir = "artifacts/myportofolio/dist/public"
 serve = "static"
 
 [[services.production.rewrites]]
@@ -27,5 +27,5 @@ from = "/*"
 to = "/index.html"
 
 [services.env]
-PORT = "21113"
+PORT = "21114"
 BASE_PATH = "/"
