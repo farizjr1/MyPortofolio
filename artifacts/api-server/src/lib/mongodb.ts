@@ -20,6 +20,8 @@ export async function connectMongoDB(): Promise<void> {
     await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
     isConnected = true;
     logger.info("MongoDB connected");
+    const { seedDatabase } = await import("./seed");
+    await seedDatabase();
   } catch (err) {
     logger.error({ err }, "MongoDB connection failed");
     throw err;

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useGetMe } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { LogIn, User, Menu } from "lucide-react";
+import { User, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 
@@ -40,19 +40,14 @@ export default function Navbar() {
             ))}
           </div>
           
-          <div className="flex items-center gap-4 border-l pl-4 border-border">
-            {user ? (
+          {user && (
+            <div className="flex items-center gap-4 border-l pl-4 border-border">
               <Link href="/admin" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 <User className="h-4 w-4" />
                 Dashboard
               </Link>
-            ) : (
-              <Link href="/login" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                <LogIn className="h-4 w-4" />
-                Login
-              </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile Nav */}
@@ -78,17 +73,14 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                <div className="my-4 border-t border-border"></div>
-                {user ? (
-                  <Link href="/admin" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-2 py-1 text-lg font-medium text-muted-foreground hover:text-primary transition-colors">
-                    <User className="h-5 w-5" />
-                    Dashboard
-                  </Link>
-                ) : (
-                  <Link href="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-2 py-1 text-lg font-medium text-muted-foreground hover:text-primary transition-colors">
-                    <LogIn className="h-5 w-5" />
-                    Login
-                  </Link>
+                {user && (
+                  <>
+                    <div className="my-4 border-t border-border"></div>
+                    <Link href="/admin" onClick={() => setIsOpen(false)} className="flex items-center gap-2 px-2 py-1 text-lg font-medium text-muted-foreground hover:text-primary transition-colors">
+                      <User className="h-5 w-5" />
+                      Dashboard
+                    </Link>
+                  </>
                 )}
               </nav>
             </SheetContent>
