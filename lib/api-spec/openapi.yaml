@@ -3,20 +3,30 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Portfolio CMS & ATS CV Generator API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: profile
+    description: Public profile/about data
+  - name: portfolio
+    description: Portfolio project management
+  - name: content
+    description: CMS content management
+  - name: cv
+    description: CV data management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +34,511 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ───────────────────────────────────────────────────────────────────
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new admin user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      tags: [auth]
+      summary: Verify email with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailBody"
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordBody"
+      responses:
+        "200":
+          description: Reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Reset password with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordBody"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ─── PROFILE / ABOUT ────────────────────────────────────────────────────────
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get public profile/about data
+      responses:
+        "200":
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+    put:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update profile (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  # ─── PORTFOLIO ──────────────────────────────────────────────────────────────
+
+  /portfolio:
+    get:
+      operationId: listPortfolio
+      tags: [portfolio]
+      summary: List all portfolio projects (public)
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: featured
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PortfolioProject"
+
+    post:
+      operationId: createPortfolioProject
+      tags: [portfolio]
+      summary: Create portfolio project (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePortfolioProjectBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioProject"
+
+  /portfolio/{id}:
+    get:
+      operationId: getPortfolioProject
+      tags: [portfolio]
+      summary: Get a single portfolio project
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Portfolio project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioProject"
+
+    put:
+      operationId: updatePortfolioProject
+      tags: [portfolio]
+      summary: Update portfolio project (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePortfolioProjectBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioProject"
+
+    delete:
+      operationId: deletePortfolioProject
+      tags: [portfolio]
+      summary: Delete portfolio project (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /portfolio/stats:
+    get:
+      operationId: getPortfolioStats
+      tags: [portfolio]
+      summary: Get portfolio statistics (total, by category)
+      responses:
+        "200":
+          description: Portfolio stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortfolioStats"
+
+  # ─── CONTENT / CMS ──────────────────────────────────────────────────────────
+
+  /content:
+    get:
+      operationId: listContent
+      tags: [content]
+      summary: List all CMS content items
+      parameters:
+        - in: query
+          name: section
+          schema:
+            type: string
+        - in: query
+          name: published
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of content
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContentItem"
+
+    post:
+      operationId: createContent
+      tags: [content]
+      summary: Create content item (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContentBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentItem"
+
+  /content/{id}:
+    put:
+      operationId: updateContent
+      tags: [content]
+      summary: Update content item (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContentBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContentItem"
+
+    delete:
+      operationId: deleteContent
+      tags: [content]
+      summary: Delete content item (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ─── CV DATA ─────────────────────────────────────────────────────────────────
+
+  /cv:
+    get:
+      operationId: listCv
+      tags: [cv]
+      summary: List all saved CV templates
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of CV data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CvData"
+
+    post:
+      operationId: createCv
+      tags: [cv]
+      summary: Save a new CV
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCvBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CvData"
+
+  /cv/{id}:
+    get:
+      operationId: getCv
+      tags: [cv]
+      summary: Get a CV by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: CV data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CvData"
+
+    put:
+      operationId: updateCv
+      tags: [cv]
+      summary: Update CV data
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCvBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CvData"
+
+    delete:
+      operationId: deleteCv
+      tags: [cv]
+      summary: Delete CV
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +548,647 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        error:
+          type: string
+      required:
+        - message
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    # ─── AUTH ─────────────────────────────────────────────────────────────────
+
+    RegisterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+      required:
+        - name
+        - email
+        - password
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    VerifyEmailBody:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    ForgotPasswordBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+
+    ResetPasswordBody:
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 6
+      required:
+        - token
+        - password
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, viewer]
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+        - isVerified
+        - createdAt
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    # ─── PROFILE ──────────────────────────────────────────────────────────────
+
+    EducationItem:
+      type: object
+      properties:
+        id:
+          type: string
+        institution:
+          type: string
+        degree:
+          type: string
+        field:
+          type: string
+        startYear:
+          type: string
+        endYear:
+          type: string
+        description:
+          type: string
+      required:
+        - id
+        - institution
+        - degree
+        - field
+        - startYear
+        - endYear
+
+    ExperienceItem:
+      type: object
+      properties:
+        id:
+          type: string
+        company:
+          type: string
+        position:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        isCurrent:
+          type: boolean
+        description:
+          type: string
+        technologies:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - company
+        - position
+        - startDate
+        - isCurrent
+
+    SkillItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        level:
+          type: integer
+          minimum: 1
+          maximum: 100
+      required:
+        - id
+        - name
+        - category
+        - level
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        bio:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        avatarUrl:
+          type: string
+        githubUrl:
+          type: string
+        linkedinUrl:
+          type: string
+        websiteUrl:
+          type: string
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/EducationItem"
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceItem"
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillItem"
+        tools:
+          type: array
+          items:
+            type: string
+        expertiseAreas:
+          type: array
+          items:
+            type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - title
+        - bio
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        bio:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        avatarUrl:
+          type: string
+        githubUrl:
+          type: string
+        linkedinUrl:
+          type: string
+        websiteUrl:
+          type: string
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/EducationItem"
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceItem"
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillItem"
+        tools:
+          type: array
+          items:
+            type: string
+        expertiseAreas:
+          type: array
+          items:
+            type: string
+
+    # ─── PORTFOLIO ────────────────────────────────────────────────────────────
+
+    PortfolioProject:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        longDescription:
+          type: string
+        category:
+          type: string
+        technologies:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: string
+        demoUrl:
+          type: string
+        githubUrl:
+          type: string
+        featured:
+          type: boolean
+        order:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - category
+        - technologies
+        - featured
+
+    CreatePortfolioProjectBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        longDescription:
+          type: string
+        category:
+          type: string
+        technologies:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: string
+        demoUrl:
+          type: string
+        githubUrl:
+          type: string
+        featured:
+          type: boolean
+        order:
+          type: integer
+      required:
+        - title
+        - description
+        - category
+        - technologies
+
+    PortfolioStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        featured:
+          type: integer
+        byCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              count:
+                type: integer
+            required:
+              - category
+              - count
+      required:
+        - total
+        - featured
+        - byCategory
+
+    # ─── CONTENT / CMS ────────────────────────────────────────────────────────
+
+    ContentItem:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        section:
+          type: string
+          enum: [home, about, contact, services, testimonials, custom]
+        published:
+          type: boolean
+        order:
+          type: integer
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - body
+        - section
+        - published
+
+    CreateContentBody:
+      type: object
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        section:
+          type: string
+          enum: [home, about, contact, services, testimonials, custom]
+        published:
+          type: boolean
+        order:
+          type: integer
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - title
+        - body
+        - section
+
+    # ─── CV DATA ──────────────────────────────────────────────────────────────
+
+    CvPersonal:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        location:
+          type: string
+        linkedin:
+          type: string
+        github:
+          type: string
+        website:
+          type: string
+        summary:
+          type: string
+      required:
+        - fullName
+        - email
+
+    CvEducation:
+      type: object
+      properties:
+        id:
+          type: string
+        institution:
+          type: string
+        degree:
+          type: string
+        field:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        gpa:
+          type: string
+        description:
+          type: string
+      required:
+        - id
+        - institution
+        - degree
+        - field
+        - startDate
+
+    CvExperience:
+      type: object
+      properties:
+        id:
+          type: string
+        company:
+          type: string
+        position:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        isCurrent:
+          type: boolean
+        bullets:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - company
+        - position
+        - startDate
+        - isCurrent
+        - bullets
+
+    CvSkillGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - category
+        - skills
+
+    CvCertification:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        issuer:
+          type: string
+        date:
+          type: string
+        url:
+          type: string
+      required:
+        - id
+        - name
+        - issuer
+        - date
+
+    CvData:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        personal:
+          $ref: "#/components/schemas/CvPersonal"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvEducation"
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvExperience"
+        skillGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvSkillGroup"
+        certifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvCertification"
+        languages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              proficiency:
+                type: string
+            required:
+              - id
+              - name
+              - proficiency
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - label
+        - personal
+
+    CreateCvBody:
+      type: object
+      properties:
+        label:
+          type: string
+        personal:
+          $ref: "#/components/schemas/CvPersonal"
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvEducation"
+        experience:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvExperience"
+        skillGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvSkillGroup"
+        certifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/CvCertification"
+        languages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              proficiency:
+                type: string
+            required:
+              - id
+              - name
+              - proficiency
+      required:
+        - label
+        - personal
