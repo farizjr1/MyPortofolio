@@ -1,5 +1,6 @@
 import React from "react";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,11 +9,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main className="flex-1 flex flex-col">
         {children}
       </main>
-      <footer className="py-8 border-t border-border mt-auto">
-        <div className="container mx-auto px-4 max-w-7xl text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Fariz Jelang Ramadhan. All rights reserved.
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
