@@ -108,22 +108,35 @@ Lakukan ini **pertama** sebelum deploy backend atau frontend.
 3. Klik **"Import"** di sebelah repository **farizjr1/MyPortofolio**
 4. Konfigurasi project:
 
+   > **Ada dua cara deploy — pilih salah satu:**
+
+   **Cara A — Deploy dari Root Directory (direkomendasikan)**
+
+   Biarkan Root Directory tetap `/` (root repo). File `vercel.json` di root sudah
+   mengonfigurasi semua secara otomatis — tidak perlu mengubah apapun di Vercel.
+
    | Setting | Value |
    |---|---|
-   | **Framework Preset** | `Vite` |
-   | **Root Directory** | `artifacts/myportofolio` *(klik Edit untuk mengubah)* |
-   | **Build Command** | `pnpm run build` |
-   | **Output Directory** | `dist/public` |
-   | **Install Command** | `pnpm install` |
+   | **Framework Preset** | `Other` |
+   | **Root Directory** | *(biarkan kosong / root)* |
+   | **Build Command** | *(otomatis dari `vercel.json`)* |
+   | **Output Directory** | *(otomatis dari `vercel.json`)* |
+   | **Install Command** | *(otomatis dari `vercel.json`)* |
 
-5. Di bagian **"Environment Variables"**, tambahkan:
+   **Cara B — Deploy dengan Root Directory di-set ke folder frontend**
 
-   | Key | Value |
+   Klik **Edit** pada Root Directory, isi `artifacts/myportofolio`.
+   File `artifacts/myportofolio/vercel.json` akan digunakan secara otomatis.
+
+   | Setting | Value |
    |---|---|
-   | `NODE_ENV` | `production` |
-   | `BASE_PATH` | `/` |
+   | **Framework Preset** | `Other` |
+   | **Root Directory** | `artifacts/myportofolio` |
+   | **Build Command** | *(otomatis dari `vercel.json`)* |
+   | **Output Directory** | *(otomatis dari `vercel.json`)* |
 
-6. Klik **"Deploy"** → tunggu 2-5 menit
+5. Di bagian **"Environment Variables"** — semua sudah ada di `vercel.json`,
+   tidak perlu tambah manual. Cukup klik **"Deploy"** → tunggu 2-5 menit
 7. Vercel memberi URL sementara, misal: `https://myportofolio-xyz.vercel.app`
 
 ### Setup Custom Domain `portfolio.flutce.app`
