@@ -178,7 +178,9 @@ export function CvPreview({ profile }: { profile: any }) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 8px" }}>
             {d.tools.map((tool) => (
               <span key={tool} style={{
-                fontSize: "8.5pt", padding: "2px 8px",
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                fontSize: "8.5pt", lineHeight: 1,
+                padding: "4px 9px",
                 border: "1px solid #ccc", borderRadius: "3px", color: "#444", backgroundColor: "#fafafa",
               }}>
                 {tool}
