@@ -175,21 +175,29 @@ export function CvPreview({ profile }: { profile: any }) {
       {d.tools.length > 0 && (
         <>
           <SectionTitle>Tools &amp; Teknologi</SectionTitle>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 8px" }}>
-            {d.tools.map((tool) => (
-              <span key={tool} style={{
-                display: "inline-block",
-                fontSize: "8pt",
-                padding: "3px 10px",
-                border: "1px solid #bbb",
-                borderRadius: "3px",
-                color: "#444",
-                backgroundColor: "#f5f5f5",
-              }}>
-                {tool}
-              </span>
-            ))}
-          </div>
+          <table style={{ borderCollapse: "separate", borderSpacing: "5px 4px", margin: "-4px -5px" }}>
+            <tbody>
+              {Array.from({ length: Math.ceil(d.tools.length / 6) }, (_, row) => (
+                <tr key={row}>
+                  {d.tools.slice(row * 6, row * 6 + 6).map((tool) => (
+                    <td key={tool} style={{
+                      fontSize: "8pt",
+                      padding: "3px 10px",
+                      border: "1px solid #bbb",
+                      borderRadius: "3px",
+                      color: "#444",
+                      backgroundColor: "#f5f5f5",
+                      whiteSpace: "nowrap",
+                      textAlign: "center",
+                      verticalAlign: "middle",
+                    }}>
+                      {tool}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
 
