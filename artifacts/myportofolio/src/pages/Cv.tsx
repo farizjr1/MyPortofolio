@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 import { Download, Printer, ArrowLeft, Loader2 } from "lucide-react";
@@ -203,6 +203,28 @@ export default function CvPage() {
   const [downloading, setDownloading] = useState(false);
   const { toast } = useToast();
 
+  // ── Responsive scale for mobile ──
+  const outerRef  = useRef<HTMLDivElement>(null); // measures available width
+  const scalerRef = useRef<HTMLDivElement>(null); // receives transform
+  const [scale,  setScale]  = useState(1);
+  const [clipH,  setClipH]  = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const update = () => {
+      const outer  = outerRef.current;
+      const scaler = scalerRef.current;
+      if (!outer || !scaler) return;
+      const newScale = Math.min(1, outer.offsetWidth / 794);
+      setScale(newScale);
+      setClipH(scaler.scrollHeight * newScale);
+    };
+    const ro = new ResizeObserver(update);
+    if (outerRef.current) ro.observe(outerRef.current);
+    // Re-measure after content loads
+    const t = setTimeout(update, 120);
+    return () => { ro.disconnect(); clearTimeout(t); };
+  }, [isLoading]);
+
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const handleDownload = async () => {
@@ -213,7 +235,11 @@ export default function CvPage() {
       const el = document.getElementById("cv-preview");
       if (!el) throw new Error("CV element not found");
 
-      // Wait a frame to ensure all styles are applied
+      // Temporarily reset scale so html2canvas captures at full 794px width
+      if (scalerRef.current) {
+        scalerRef.current.style.transform = "scale(1)";
+        scalerRef.current.style.transformOrigin = "top left";
+      }
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
       const canvas = await html2canvas(el, {
@@ -257,6 +283,11 @@ export default function CvPage() {
       console.error("PDF error:", err);
       toast({ variant: "destructive", title: "Gagal generate PDF", description: "Coba lagi atau gunakan tombol Lihat CV untuk print manual." });
     } finally {
+      // Restore responsive scale
+      if (scalerRef.current) {
+        scalerRef.current.style.transform = `scale(${scale})`;
+        scalerRef.current.style.transformOrigin = "top left";
+      }
       setDownloading(false);
     }
   };
@@ -321,37 +352,54 @@ export default function CvPage() {
       </div>
 
       {/* ── CV Preview ── */}
-      <div className="py-10 px-4">
+      <div className="py-8 px-3 sm:px-6">
+
         {isLoading ? (
-          <div
-            className="mx-auto bg-white rounded-xl shadow-2xl flex items-center justify-center"
-            style={{ width: "210mm", height: "297mm" }}
-          >
+          /* Loading skeleton */
+          <div className="mx-auto bg-white rounded-xl shadow-2xl flex items-center justify-center"
+            style={{ width: "min(794px, 100%)", aspectRatio: "794/1123" }}>
             <div className="flex flex-col items-center gap-3 text-gray-400">
               <div className="h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
               <span className="text-sm">Memuat data profil…</span>
             </div>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mx-auto shadow-2xl rounded-sm overflow-hidden"
-            style={{ width: "fit-content" }}
-          >
-            <CvPreview profile={profile} />
-          </motion.div>
+          /* ── Responsive scale container ──
+             outerRef measures available px → scale = availW / 794
+             scalerRef holds the 794px-wide preview, scaled via transform
+             clipH = natural height × scale so no blank space below        */
+          <div ref={outerRef} className="mx-auto w-full" style={{ maxWidth: "854px" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{
+                overflow: "hidden",
+                height: clipH ?? "auto",
+                boxShadow: "0 25px 60px -10px rgba(0,0,0,0.35)",
+                borderRadius: "2px",
+              }}
+            >
+              <div
+                ref={scalerRef}
+                style={{
+                  width: "794px",
+                  transform: `scale(${scale})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                <CvPreview profile={profile} />
+              </div>
+            </motion.div>
+          </div>
         )}
 
         {/* ATS Note */}
         {!isLoading && (
-          <div
-            className="mx-auto mt-6 p-4 rounded-xl border border-border/30 bg-card/40 backdrop-blur-sm"
-            style={{ maxWidth: "210mm" }}
-          >
+          <div className="mx-auto mt-5 p-4 rounded-xl border border-border/30 bg-card/40 backdrop-blur-sm"
+            style={{ maxWidth: "794px" }}>
             <p className="text-xs text-muted-foreground/70 text-center">
-              ✅ <strong className="text-muted-foreground">ATS-Friendly</strong> · PDF yang didownload identik dengan tampilan di atas ·{" "}
+              ✅ <strong className="text-muted-foreground">ATS-Friendly</strong> · PDF identik dengan tampilan di atas ·{" "}
               Edit data di{" "}
               <Link href="/admin/profile">
                 <span className="text-primary underline decoration-dotted cursor-pointer hover:text-primary/80">Profile Editor</span>
