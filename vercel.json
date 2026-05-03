@@ -10,7 +10,8 @@
     "NODE_ENV": "production"
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "https://placeholder-replace-with-railway-url.railway.app/api/$1" },
+    { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
