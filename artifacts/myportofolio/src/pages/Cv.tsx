@@ -175,29 +175,9 @@ export function CvPreview({ profile }: { profile: any }) {
       {d.tools.length > 0 && (
         <>
           <SectionTitle>Tools &amp; Teknologi</SectionTitle>
-          <table style={{ borderCollapse: "separate", borderSpacing: "5px 4px", margin: "-4px -5px" }}>
-            <tbody>
-              {Array.from({ length: Math.ceil(d.tools.length / 6) }, (_, row) => (
-                <tr key={row}>
-                  {d.tools.slice(row * 6, row * 6 + 6).map((tool) => (
-                    <td key={tool} style={{
-                      fontSize: "8pt",
-                      padding: "3px 10px",
-                      border: "1px solid #bbb",
-                      borderRadius: "3px",
-                      color: "#444",
-                      backgroundColor: "#f5f5f5",
-                      whiteSpace: "nowrap",
-                      textAlign: "center",
-                      verticalAlign: "middle",
-                    }}>
-                      {tool}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <p style={{ fontSize: "9.5pt", color: "#444", margin: 0, lineHeight: 1.6 }}>
+            {d.tools.join("  \u00b7  ")}
+          </p>
         </>
       )}
 
@@ -208,6 +188,11 @@ export function CvPreview({ profile }: { profile: any }) {
           <p style={{ fontSize: "9.5pt", color: "#444", margin: 0 }}>{d.expertiseAreas.join(" • ")}</p>
         </>
       )}
+
+      {/* ── Generated stamp ── */}
+      <p style={{ fontSize: "7pt", color: "#bbb", marginTop: "28px", marginBottom: 0, textAlign: "right" }}>
+        Generated: {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+      </p>
     </div>
   );
 }
