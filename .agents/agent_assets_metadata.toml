@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "42KhgbiomcpGb67dDp4w1"
+uri = "file://DeployToVercel.md"
+type = "text"
+title = "DeployToVercel.md"
+
+[[outputs]]
+id = "9rWCDBImnYvM1EtXMjqCo"
+uri = "file://DeployToGithub.md"
+type = "text"
+title = "DeployToGithub.md"
