@@ -180,9 +180,7 @@ export function CvPreview({ profile }: { profile: any }) {
               <span key={tool} style={{
                 display: "inline-block",
                 fontSize: "8pt",
-                lineHeight: "1",
-                padding: "4px 9px 4px 9px",
-                verticalAlign: "middle",
+                padding: "3px 10px",
                 border: "1px solid #bbb",
                 borderRadius: "3px",
                 color: "#444",
