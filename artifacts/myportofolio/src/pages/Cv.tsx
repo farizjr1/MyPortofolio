@@ -227,53 +227,21 @@ export default function CvPage() {
         removeContainer: true,
       });
 
-      // A4 width in points = 595.28 pt
-      // Scale canvas pixels → PDF points
+      // Map canvas pixels → PDF points using A4 width as anchor
       const A4_W = 595.28;
       const ratio = A4_W / canvas.width;
-      const contentH = canvas.height * ratio;   // total PDF height in points
-      const A4_H = 841.89;
+      // Page height = exact content height — no slicing, no cutting
+      const pageH = canvas.height * ratio;
 
-      let pdf: jsPDF;
-
-      if (contentH <= A4_H) {
-        // Fits on one standard A4 page — add white space at bottom
-        pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-        pdf.addImage(canvas.toDataURL("image/jpeg", 0.97), "JPEG", 0, 0, A4_W, contentH);
-      } else {
-        // Content taller than A4 — split into proper A4 pages
-        // Slice canvas at A4 boundaries (in canvas pixels)
-        const pageHPx = Math.floor(A4_H / ratio);   // how many canvas rows per page
-        pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-
-        let offsetPx = 0;
-        let pageIndex = 0;
-        while (offsetPx < canvas.height) {
-          const slicePx = Math.min(pageHPx, canvas.height - offsetPx);
-
-          // Draw this slice into a temp canvas
-          const tmp = document.createElement("canvas");
-          tmp.width  = canvas.width;
-          tmp.height = pageHPx;                    // always full A4-height canvas
-          const ctx  = tmp.getContext("2d")!;
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, tmp.width, tmp.height);
-          ctx.drawImage(canvas, 0, -offsetPx);     // shift source up
-
-          if (pageIndex > 0) pdf.addPage();
-          // Height of drawn content on this page (last page may be shorter)
-          const drawnH = slicePx * ratio;
-          pdf.addImage(tmp.toDataURL("image/jpeg", 0.97), "JPEG", 0, 0, A4_W, A4_H);
-          // White-out the blank area below actual content on last page
-          if (drawnH < A4_H) {
-            pdf.setFillColor(255, 255, 255);
-            pdf.rect(0, drawnH, A4_W, A4_H - drawnH, "F");
-          }
-
-          offsetPx += slicePx;
-          pageIndex++;
-        }
-      }
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: [A4_W, pageH],   // custom tall page — fits all content
+      });
+      pdf.addImage(
+        canvas.toDataURL("image/jpeg", 0.97),
+        "JPEG", 0, 0, A4_W, pageH,
+      );
 
       // Create blob URL and trigger download
       const blob = pdf.output("blob");
