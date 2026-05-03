@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
-import { Download, Printer, ArrowLeft, Mail, Phone, MapPin, Linkedin, Github, Globe, Loader2 } from "lucide-react";
+import { Download, Printer, ArrowLeft, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { useToast } from "@/hooks/use-toast";
 
 // ─── Data Builder ─────────────────────────────────────────────────────────────
 function buildCvData(profile: any) {
@@ -18,185 +19,182 @@ function buildCvData(profile: any) {
     github: profile?.githubUrl || "",
     website: profile?.websiteUrl || "",
     summary: profile?.bio ? profile.bio.split("\n")[0] : "",
-    experience: profile?.experience || [],
-    education: profile?.education || [],
-    skills: profile?.skills || [],
-    tools: profile?.tools || [],
-    expertiseAreas: profile?.expertiseAreas || [],
+    experience: (profile?.experience || []) as any[],
+    education: (profile?.education || []) as any[],
+    skills: (profile?.skills || []) as any[],
+    tools: (profile?.tools || []) as string[],
+    expertiseAreas: (profile?.expertiseAreas || []) as string[],
   };
 }
 
 // ─── Section Title ─────────────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 mt-7 mb-3">
-      <h2 className="cv-section-title text-[10.5pt] font-bold uppercase tracking-[0.14em] text-gray-900 whitespace-nowrap">
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "24px", marginBottom: "10px" }}>
+      <h2 style={{
+        fontSize: "10.5pt", fontWeight: 800, textTransform: "uppercase",
+        letterSpacing: "0.14em", color: "#111", whiteSpace: "nowrap", margin: 0,
+      }}>
         {children}
       </h2>
-      <div className="flex-1 h-[1.5px] bg-gray-900" />
+      <div style={{ flex: 1, height: "1.5px", backgroundColor: "#111" }} />
     </div>
   );
 }
 
-// ─── CV Preview (HTML — used both on screen and captured for PDF) ──────────────
-export function CvPreview({ profile, forExport = false }: { profile: any; forExport?: boolean }) {
+// ─── CV Preview ───────────────────────────────────────────────────────────────
+// Uses ONLY inline styles + plain Unicode symbols — no SVG icons, no Tailwind classes
+// so html2canvas can capture it perfectly.
+export function CvPreview({ profile }: { profile: any }) {
   const d = buildCvData(profile);
 
-  const skillsByCategory = (d.skills as any[]).reduce((acc: Record<string, string[]>, s: any) => {
+  const skillsByCategory = d.skills.reduce((acc: Record<string, string[]>, s: any) => {
     const cat = s.category || "Lainnya";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(s.name);
     return acc;
   }, {});
 
+  // Contact row items — plain text symbols instead of SVG icons
   const contactItems = [
-    d.email    && { icon: <Mail    className="h-[10px] w-[10px]" />, text: d.email,    href: `mailto:${d.email}` },
-    d.phone    && { icon: <Phone   className="h-[10px] w-[10px]" />, text: d.phone },
-    d.location && { icon: <MapPin  className="h-[10px] w-[10px]" />, text: d.location },
-    d.linkedin && { icon: <Linkedin className="h-[10px] w-[10px]" />, text: d.linkedin.replace("https://www.", "").replace("https://", ""), href: d.linkedin },
-    d.github   && { icon: <Github  className="h-[10px] w-[10px]" />, text: d.github.replace("https://", ""), href: d.github },
-    d.website  && { icon: <Globe   className="h-[10px] w-[10px]" />, text: d.website.replace("https://", ""), href: d.website },
-  ].filter(Boolean) as any[];
-
-  const base: React.CSSProperties = forExport
-    ? { width: "794px", minHeight: "1123px", padding: "68px 60px", fontSize: "10pt", lineHeight: 1.5, fontFamily: "Arial, Helvetica, sans-serif", backgroundColor: "#fff", color: "#111", boxSizing: "border-box" }
-    : { width: "210mm", minHeight: "297mm", padding: "18mm 16mm", fontSize: "10pt", lineHeight: 1.45, boxSizing: "border-box" };
+    d.email    && { symbol: "✉",  text: d.email },
+    d.phone    && { symbol: "☏",  text: d.phone },
+    d.location && { symbol: "⊙",  text: d.location },
+    d.linkedin && { symbol: "in", text: d.linkedin.replace("https://www.", "").replace("https://", "") },
+    d.github   && { symbol: "⎇",  text: d.github.replace("https://", "") },
+    d.website  && { symbol: "⊕",  text: d.website.replace("https://", "") },
+  ].filter(Boolean) as { symbol: string; text: string }[];
 
   return (
-    <div id="cv-preview" className="bg-white text-gray-900" style={base}>
+    <div
+      id="cv-preview"
+      style={{
+        width: "210mm",
+        minHeight: "297mm",
+        padding: "18mm 16mm",
+        fontSize: "10pt",
+        lineHeight: 1.5,
+        fontFamily: "Arial, Helvetica, sans-serif",
+        backgroundColor: "#ffffff",
+        color: "#111111",
+        boxSizing: "border-box",
+      }}
+    >
       {/* ── Header ── */}
-      <div>
-        <h1 style={{ fontSize: "22pt", fontWeight: 800, letterSpacing: "0.03em", textTransform: "uppercase", lineHeight: 1.15, marginBottom: "4px", color: "#111" }}>
-          {d.name}
-        </h1>
-        {d.title && (
-          <p style={{ fontSize: "11pt", color: "#555", marginTop: "2px", marginBottom: "4px" }}>{d.title}</p>
-        )}
-      </div>
+      <h1 style={{ fontSize: "22pt", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", lineHeight: 1.1, margin: 0, color: "#111" }}>
+        {d.name}
+      </h1>
+      {d.title && (
+        <p style={{ fontSize: "11pt", color: "#555", margin: "4px 0 0 0" }}>{d.title}</p>
+      )}
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "14px 20px", marginTop: "8px", fontSize: "8.5pt", color: "#444" }}>
+      {/* Contact row */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 18px", marginTop: "8px", fontSize: "8.5pt", color: "#444" }}>
         {contactItems.map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <span style={{ color: "#666" }}>{item.icon}</span>
-            {item.href ? (
-              <a href={item.href} style={{ color: "#333", textDecoration: "none" }}>{item.text}</a>
-            ) : (
-              <span>{item.text}</span>
-            )}
-          </div>
+          <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+            <span style={{ fontWeight: 700, color: "#666", fontSize: "9pt" }}>{item.symbol}</span>
+            <span>{item.text}</span>
+          </span>
         ))}
       </div>
 
-      <div style={{ height: "1.5px", backgroundColor: "#111", marginTop: "10px", marginBottom: "2px" }} />
+      <div style={{ height: "1.5px", backgroundColor: "#111", marginTop: "10px" }} />
 
       {/* ── Summary ── */}
       {d.summary && (
-        <div>
+        <>
           <SectionTitle>Profil Singkat</SectionTitle>
-          <p style={{ fontSize: "9.5pt", textAlign: "justify", lineHeight: 1.6, color: "#333" }}>{d.summary}</p>
-        </div>
+          <p style={{ fontSize: "9.5pt", textAlign: "justify", lineHeight: 1.6, color: "#333", margin: 0 }}>{d.summary}</p>
+        </>
       )}
 
       {/* ── Experience ── */}
-      {(d.experience as any[]).length > 0 && (
-        <div>
+      {d.experience.length > 0 && (
+        <>
           <SectionTitle>Pengalaman Kerja</SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {(d.experience as any[]).map((exp: any, i: number) => (
-              <div key={i}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: "10.5pt", fontWeight: 700, color: "#111" }}>{exp.company}</span>
-                  <span style={{ fontSize: "8.5pt", color: "#666", flexShrink: 0, marginLeft: "8px" }}>
-                    {exp.startDate} – {exp.isCurrent ? "Sekarang" : exp.endDate || ""}
-                  </span>
-                </div>
-                <div style={{ fontSize: "9.5pt", fontStyle: "italic", color: "#555", marginBottom: "4px", marginTop: "1px" }}>{exp.position}</div>
-                {exp.description && (
-                  <div style={{ borderLeft: "2px solid #ddd", paddingLeft: "10px", marginTop: "4px" }}>
-                    <p style={{ fontSize: "9.5pt", color: "#333", lineHeight: 1.55 }}>• {exp.description}</p>
-                  </div>
-                )}
-                {exp.technologies?.length > 0 && (
-                  <p style={{ fontSize: "8.5pt", color: "#777", marginTop: "4px", paddingLeft: "12px" }}>
-                    <strong style={{ color: "#555" }}>Teknologi:</strong> {exp.technologies.join(", ")}
-                  </p>
-                )}
+          {d.experience.map((exp: any, i: number) => (
+            <div key={i} style={{ marginBottom: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span style={{ fontSize: "10.5pt", fontWeight: 700, color: "#111" }}>{exp.company}</span>
+                <span style={{ fontSize: "8.5pt", color: "#666", flexShrink: 0, marginLeft: "8px" }}>
+                  {exp.startDate} – {exp.isCurrent ? "Sekarang" : exp.endDate || ""}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
+              <div style={{ fontSize: "9.5pt", fontStyle: "italic", color: "#555", marginTop: "1px", marginBottom: "4px" }}>{exp.position}</div>
+              {exp.description && (
+                <div style={{ borderLeft: "2px solid #ddd", paddingLeft: "10px" }}>
+                  <p style={{ fontSize: "9.5pt", color: "#333", lineHeight: 1.55, margin: 0 }}>• {exp.description}</p>
+                </div>
+              )}
+              {exp.technologies?.length > 0 && (
+                <p style={{ fontSize: "8.5pt", color: "#777", marginTop: "3px", paddingLeft: "12px", margin: "3px 0 0 12px" }}>
+                  <strong style={{ color: "#555" }}>Teknologi:</strong> {exp.technologies.join(", ")}
+                </p>
+              )}
+            </div>
+          ))}
+        </>
       )}
 
       {/* ── Education ── */}
-      {(d.education as any[]).length > 0 && (
-        <div>
+      {d.education.length > 0 && (
+        <>
           <SectionTitle>Pendidikan</SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {(d.education as any[]).map((edu: any, i: number) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "10.5pt", fontWeight: 700, color: "#111" }}>{edu.institution}</div>
-                  <div style={{ fontSize: "9.5pt", color: "#555", marginTop: "1px" }}>
-                    {edu.degree}{edu.field ? ` — ${edu.field}` : ""}
-                  </div>
-                  {edu.description && (
-                    <div style={{ fontSize: "9pt", color: "#666", marginTop: "2px" }}>{edu.description}</div>
-                  )}
+          {d.education.map((edu: any, i: number) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "10.5pt", fontWeight: 700, color: "#111" }}>{edu.institution}</div>
+                <div style={{ fontSize: "9.5pt", color: "#555", marginTop: "1px" }}>
+                  {edu.degree}{edu.field ? ` — ${edu.field}` : ""}
                 </div>
-                <span style={{ fontSize: "8.5pt", color: "#666", flexShrink: 0, marginLeft: "8px" }}>
-                  {edu.startYear} – {edu.endYear}
-                </span>
+                {edu.description && (
+                  <div style={{ fontSize: "9pt", color: "#666", marginTop: "2px" }}>{edu.description}</div>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
+              <span style={{ fontSize: "8.5pt", color: "#666", flexShrink: 0, marginLeft: "8px" }}>
+                {edu.startYear} – {edu.endYear}
+              </span>
+            </div>
+          ))}
+        </>
       )}
 
       {/* ── Skills ── */}
       {Object.keys(skillsByCategory).length > 0 && (
-        <div>
+        <>
           <SectionTitle>Keahlian</SectionTitle>
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-            {Object.entries(skillsByCategory).map(([cat, names]) => (
-              <div key={cat} style={{ display: "flex", alignItems: "baseline", gap: "8px", fontSize: "9.5pt" }}>
-                <span style={{ fontWeight: 700, color: "#222", minWidth: "110px", flexShrink: 0 }}>{cat}</span>
-                <span style={{ color: "#444" }}>{(names as string[]).join(" • ")}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+          {Object.entries(skillsByCategory).map(([cat, names]) => (
+            <div key={cat} style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "5px", fontSize: "9.5pt" }}>
+              <span style={{ fontWeight: 700, color: "#222", minWidth: "110px", flexShrink: 0 }}>{cat}</span>
+              <span style={{ color: "#444" }}>{(names as string[]).join(" • ")}</span>
+            </div>
+          ))}
+        </>
       )}
 
       {/* ── Tools ── */}
-      {(d.tools as string[]).length > 0 && (
-        <div>
+      {d.tools.length > 0 && (
+        <>
           <SectionTitle>Tools &amp; Teknologi</SectionTitle>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 8px" }}>
-            {(d.tools as string[]).map((tool) => (
-              <span
-                key={tool}
-                style={{
-                  fontSize: "8.5pt",
-                  padding: "2px 8px",
-                  border: "1px solid #ccc",
-                  borderRadius: "3px",
-                  color: "#444",
-                  backgroundColor: "#fafafa",
-                }}
-              >
+            {d.tools.map((tool) => (
+              <span key={tool} style={{
+                fontSize: "8.5pt", padding: "2px 8px",
+                border: "1px solid #ccc", borderRadius: "3px", color: "#444", backgroundColor: "#fafafa",
+              }}>
                 {tool}
               </span>
             ))}
           </div>
-        </div>
+        </>
       )}
 
       {/* ── Expertise ── */}
-      {(d.expertiseAreas as string[]).length > 0 && (
-        <div>
+      {d.expertiseAreas.length > 0 && (
+        <>
           <SectionTitle>Area Keahlian</SectionTitle>
-          <p style={{ fontSize: "9.5pt", color: "#444" }}>{(d.expertiseAreas as string[]).join(" • ")}</p>
-        </div>
+          <p style={{ fontSize: "9.5pt", color: "#444", margin: 0 }}>{d.expertiseAreas.join(" • ")}</p>
+        </>
       )}
     </div>
   );
@@ -205,67 +203,77 @@ export function CvPreview({ profile, forExport = false }: { profile: any; forExp
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CvPage() {
   const { data: profile, isLoading } = useGetProfile();
-  const exportRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const handleDownload = async () => {
-    if (!profile || !exportRef.current) return;
+    if (!profile) return;
     setDownloading(true);
-    try {
-      // Briefly show the hidden export node so html2canvas can capture it
-      exportRef.current.style.display = "block";
-      await new Promise(r => setTimeout(r, 120)); // let browser paint
 
-      const canvas = await html2canvas(exportRef.current, {
+    try {
+      const el = document.getElementById("cv-preview");
+      if (!el) throw new Error("CV element not found");
+
+      // Wait a frame to ensure all styles are applied
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
-        width: 794,
-        windowWidth: 794,
+        removeContainer: true,
       });
 
-      exportRef.current.style.display = "none";
-
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();   // 595.28 pt
-      const pageH = pdf.internal.pageSize.getHeight();  // 841.89 pt
 
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-      const ratio = pageW / imgW;
-      const scaledH = imgH * ratio;
+      const pageW = pdf.internal.pageSize.getWidth();   // 595 pt
+      const pageH = pdf.internal.pageSize.getHeight();  // 842 pt
+      const ratio = pageW / canvas.width;
+      const totalH = canvas.height * ratio;
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.97);
-
-      if (scaledH <= pageH) {
-        pdf.addImage(imgData, "JPEG", 0, 0, pageW, scaledH);
+      if (totalH <= pageH) {
+        pdf.addImage(imgData, "JPEG", 0, 0, pageW, totalH);
       } else {
-        // Multi-page: slice canvas per A4 page
-        let yOffset = 0;
-        while (yOffset < imgH) {
-          const sliceH = Math.min(imgH - yOffset, Math.floor(pageH / ratio));
+        // Multi-page: slice canvas row by row
+        let yPx = 0;
+        const sliceHPx = Math.floor(pageH / ratio);
+
+        while (yPx < canvas.height) {
+          const thisSlicePx = Math.min(sliceHPx, canvas.height - yPx);
           const sliceCanvas = document.createElement("canvas");
-          sliceCanvas.width = imgW;
-          sliceCanvas.height = sliceH;
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = thisSlicePx;
           const ctx = sliceCanvas.getContext("2d")!;
           ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, imgW, sliceH);
-          ctx.drawImage(canvas, 0, -yOffset);
-          const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.97);
-          if (yOffset > 0) pdf.addPage();
-          pdf.addImage(sliceData, "JPEG", 0, 0, pageW, sliceH * ratio);
-          yOffset += sliceH;
+          ctx.fillRect(0, 0, canvas.width, thisSlicePx);
+          ctx.drawImage(canvas, 0, -yPx);
+          if (yPx > 0) pdf.addPage();
+          pdf.addImage(sliceCanvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pageW, thisSlicePx * ratio);
+          yPx += thisSlicePx;
         }
       }
 
-      pdf.save(`${(profile.name || "CV").replace(/\s+/g, "_")}_ATS_CV.pdf`);
-    } catch (e) {
-      console.error("PDF error", e);
+      // Create blob URL and trigger download
+      const blob = pdf.output("blob");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(profile.name || "CV").replace(/\s+/g, "_")}_ATS_CV.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      toast({ title: "CV berhasil didownload!" });
+    } catch (err) {
+      console.error("PDF error:", err);
+      toast({ variant: "destructive", title: "Gagal generate PDF", description: "Coba lagi atau gunakan tombol Lihat CV untuk print manual." });
     } finally {
-      if (exportRef.current) exportRef.current.style.display = "none";
       setDownloading(false);
     }
   };
@@ -274,8 +282,12 @@ export default function CvPage() {
     const el = document.getElementById("cv-preview");
     if (!el) return;
     const w = window.open("", "_blank", "width=900,height=750");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>CV — ${profile?.name || ""}</title>
+    if (!w) {
+      toast({ variant: "destructive", title: "Popup diblokir", description: "Izinkan popup di browser untuk membuka halaman print." });
+      return;
+    }
+    w.document.write(`<!DOCTYPE html><html><head>
+      <title>CV — ${profile?.name || ""}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#111}
@@ -325,10 +337,13 @@ export default function CvPage() {
         </div>
       </div>
 
-      {/* ── Visible CV Preview ── */}
+      {/* ── CV Preview ── */}
       <div className="py-10 px-4">
         {isLoading ? (
-          <div className="max-w-[210mm] mx-auto bg-white rounded-xl shadow-2xl h-[297mm] flex items-center justify-center">
+          <div
+            className="mx-auto bg-white rounded-xl shadow-2xl flex items-center justify-center"
+            style={{ width: "210mm", height: "297mm" }}
+          >
             <div className="flex flex-col items-center gap-3 text-gray-400">
               <div className="h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
               <span className="text-sm">Memuat data profil…</span>
@@ -339,38 +354,29 @@ export default function CvPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="max-w-[210mm] mx-auto shadow-2xl rounded-sm overflow-hidden"
+            className="mx-auto shadow-2xl rounded-sm overflow-hidden"
+            style={{ width: "fit-content" }}
           >
             <CvPreview profile={profile} />
           </motion.div>
         )}
 
         {/* ATS Note */}
-        <div className="max-w-[210mm] mx-auto mt-6 p-4 rounded-xl border border-border/30 bg-card/40 backdrop-blur-sm">
-          <p className="text-xs text-muted-foreground/70 text-center">
-            ✅ <strong className="text-muted-foreground">ATS-Friendly</strong> · PDF yang didownload identik dengan tampilan di atas ·{" "}
-            Edit data di{" "}
-            <Link href="/admin/profile">
-              <span className="text-primary underline decoration-dotted cursor-pointer hover:text-primary/80">Profile Editor</span>
-            </Link>{" "}
-            untuk update CV secara otomatis.
-          </p>
-        </div>
-      </div>
-
-      {/* ── Hidden Export Node (794px wide = A4 at 96dpi) ── */}
-      <div
-        ref={exportRef}
-        style={{
-          display: "none",
-          position: "fixed",
-          top: 0,
-          left: "-9999px",
-          zIndex: -1,
-          backgroundColor: "#fff",
-        }}
-      >
-        {!isLoading && <CvPreview profile={profile} forExport />}
+        {!isLoading && (
+          <div
+            className="mx-auto mt-6 p-4 rounded-xl border border-border/30 bg-card/40 backdrop-blur-sm"
+            style={{ maxWidth: "210mm" }}
+          >
+            <p className="text-xs text-muted-foreground/70 text-center">
+              ✅ <strong className="text-muted-foreground">ATS-Friendly</strong> · PDF yang didownload identik dengan tampilan di atas ·{" "}
+              Edit data di{" "}
+              <Link href="/admin/profile">
+                <span className="text-primary underline decoration-dotted cursor-pointer hover:text-primary/80">Profile Editor</span>
+              </Link>{" "}
+              untuk update CV otomatis.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
