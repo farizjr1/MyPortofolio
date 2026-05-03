@@ -5,6 +5,7 @@ import profileRouter from "./profile";
 import portfolioRouter from "./portfolio";
 import contentRouter from "./content";
 import cvRouter from "./cv";
+import contactRouter from "./contact";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use("/profile", profileRouter);
 router.use("/portfolio", portfolioRouter);
 router.use("/content", contentRouter);
 router.use("/cv", cvRouter);
+router.use("/contact", contactRouter);
 
 export default router;
