@@ -188,6 +188,11 @@ export function CvPreview({ profile }: { profile: any }) {
           <p style={{ fontSize: "9.5pt", color: "#444", margin: 0 }}>{d.expertiseAreas.join(" • ")}</p>
         </>
       )}
+
+      {/* ── Generated stamp ── */}
+      <p style={{ fontSize: "7pt", color: "#bbb", marginTop: "28px", marginBottom: 0, textAlign: "right" }}>
+        Generated: {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+      </p>
     </div>
   );
 }
