@@ -651,20 +651,232 @@ Di browser:
 
 ### Akses Admin Dashboard
 
-1. Buka `/flutceadmin` di browser (URL ini tidak ada di navbar — hanya kamu yang tahu)
-2. Login dengan email dan password admin
-3. Setelah login, kamu diarahkan ke `/admin`
+1. Buka `/flutceadmin` di browser — URL ini **tidak tampil di navbar maupun footer**, hanya kamu yang tahu
+2. Masukkan email dan password admin
+3. Setelah login berhasil, kamu otomatis diarahkan ke `/admin` (dashboard utama)
+4. Sesi login berlaku selama **7 hari** — kamu tidak perlu login ulang kecuali logout manual
 
-### Fitur Admin Dashboard
+---
 
-| Menu | Fungsi |
+### Fitur Admin Dashboard — Rincian Lengkap
+
+Dashboard admin terdiri dari **5 menu utama** yang dapat diakses melalui sidebar kiri:
+
+---
+
+#### 1. Dashboard (`/admin`)
+
+Halaman ringkasan statistik seluruh konten website. Tidak ada yang bisa diedit di sini — hanya tampilan data.
+
+| Kartu Statistik | Informasi yang Ditampilkan |
 |---|---|
-| **Dashboard** | Ringkasan statistik semua data |
-| **Portfolio** | Tambah, edit, hapus proyek portfolio |
-| **Content** | Edit konten teks halaman publik |
-| **Profile** | Edit info profil (nama, bio, foto, sosial media) |
-| **CV Manager** | Kelola data CV |
-| **CV Generator** | Isi form → preview → download PDF |
+| **Total Projects** | Jumlah total proyek portfolio yang tersimpan |
+| **Featured Projects** | Jumlah proyek yang ditandai sebagai unggulan (featured) |
+| **Content Items** | Jumlah total blok konten + berapa yang sudah published |
+| **Categories** | Jumlah kategori unik dari semua proyek portfolio |
+
+Selain kartu statistik, juga tersedia:
+- **Recent Projects** — daftar 5 proyek portfolio terbaru
+- **Projects by Category** — breakdown jumlah proyek per kategori
+
+---
+
+#### 2. Portfolio Manager (`/admin/portfolio`)
+
+Kelola semua proyek yang tampil di halaman **Portfolio** publik (`/portfolio`).
+
+**Yang bisa dilakukan:**
+- ➕ **Tambah proyek baru** — klik tombol "Add Project"
+- ✏️ **Edit proyek** — klik tombol "Edit" di kartu proyek
+- 🗑️ **Hapus proyek** — klik tombol "Delete" (muncul konfirmasi sebelum dihapus)
+
+**Field yang bisa diisi/diedit per proyek:**
+
+| Field | Keterangan | Wajib |
+|---|---|---|
+| **Title** | Nama/judul proyek | ✅ |
+| **Description** | Deskripsi singkat proyek | ✅ |
+| **Category** | Kategori proyek (misal: `Accounting`, `Web App`, `Finance`) | ✅ |
+| **Technologies** | Daftar teknologi yang dipakai, pisahkan dengan koma (misal: `React, Node.js, MongoDB`) | ✅ |
+| **Image URL** | URL gambar thumbnail proyek — tampil sebagai cover card | ❌ |
+| **Demo URL** | Link demo/live project | ❌ |
+| **GitHub URL** | Link repository GitHub proyek | ❌ |
+| **Featured** | Toggle — jika aktif, proyek ditandai bintang ⭐ dan diprioritaskan tampil | ❌ |
+
+> **Tips:** Jika tidak ada Image URL, card akan tampil dengan placeholder gradien otomatis berdasarkan kategori.
+
+---
+
+#### 3. Content CMS (`/admin/content`)
+
+Kelola **blok teks konten** untuk halaman-halaman publik website. Berguna untuk menambahkan teks deskriptif, pengumuman, atau konten tambahan pada halaman tertentu.
+
+**Yang bisa dilakukan:**
+- ➕ **Tambah blok konten baru** — klik tombol "Add Content"
+- ✏️ **Edit konten** — klik tombol "Edit" di kartu konten
+- 🗑️ **Hapus konten** — klik tombol "Delete"
+- 👁️ **Publish/Draft toggle** — konten berstatus Draft tidak ditampilkan ke publik
+
+**Field yang bisa diisi/diedit per blok konten:**
+
+| Field | Keterangan | Wajib |
+|---|---|---|
+| **Title** | Judul blok konten (hanya terlihat di dashboard) | ✅ |
+| **Section** | Halaman tujuan konten ini | ✅ |
+| **Body** | Isi teks konten (mendukung baris baru/newline) | ✅ |
+| **Published** | Toggle — jika aktif, konten tampil ke publik; jika mati, berstatus Draft | ❌ |
+
+**Pilihan Section yang tersedia:**
+
+| Nilai | Halaman Tujuan |
+|---|---|
+| `home` | Halaman Home (`/`) |
+| `about` | Halaman About (`/about`) |
+| `contact` | Halaman Contact (`/contact`) |
+| `services` | Halaman Services (jika ada) |
+| `testimonials` | Halaman Testimonials (jika ada) |
+| `custom` | Section bebas/kustom |
+
+> **Catatan:** Kartu yang berstatus Draft ditampilkan dengan efek grayscale + transparan di dashboard — mudah dibedakan dari yang sudah Published.
+
+---
+
+#### 4. Profile Editor (`/admin/profile`)
+
+Kelola **semua informasi profil pribadimu** yang muncul di halaman Home, About, dan CV. Ini adalah halaman paling penting — perubahan di sini langsung memperbarui CV secara otomatis.
+
+Halaman ini dibagi menjadi **4 tab**:
+
+---
+
+**Tab 1: General Info**
+
+| Field | Tampil Di | Keterangan |
+|---|---|---|
+| **Name** | Home, About, CV, Navbar | Nama lengkap |
+| **Title / Headline** | Home, About, CV | Jabatan/profesi singkat (misal: `Junior Accountant & System Analyst`) |
+| **Bio** | About, CV (Profil Singkat) | Deskripsi diri — paragraf pertama dipakai di CV |
+| **Avatar URL** | Home (foto lingkaran) | URL foto profil. Kosong = tampil ikon SVG placeholder |
+| **Typewriter Titles** | Home (teks berputar) | Teks yang berputar di bawah nama di halaman Home. Pisahkan dengan koma. Contoh: `Accountant, Tech Enthusiast, Finance Enthusiast` |
+
+**Tab 2: Contact & Social Links** (masih di dalam tab General Info)
+
+| Field | Tampil Di | Keterangan |
+|---|---|---|
+| **Email** | About, CV, Footer | Alamat email kontak |
+| **Phone** | About, CV | Nomor telepon |
+| **Location** | About, CV, Footer | Kota/lokasi (misal: `Jakarta, Indonesia`) |
+| **Website URL** | About, CV | URL website personal |
+| **GitHub URL** | Home (ikon), About, CV, Footer | Link GitHub |
+| **LinkedIn URL** | Home (ikon), About, CV, Footer | Link LinkedIn |
+
+---
+
+**Tab 2: Experience (Pengalaman Kerja)**
+
+Tambah, edit, atau hapus riwayat pekerjaan. Tampil di halaman **About** dan **CV**.
+
+| Field | Keterangan | Wajib |
+|---|---|---|
+| **Company** | Nama perusahaan/organisasi | ✅ |
+| **Position** | Jabatan/posisi | ✅ |
+| **Start Date** | Tanggal mulai (format bebas, misal: `Jan 2020` atau `2020-01`) | ✅ |
+| **End Date** | Tanggal selesai — dinonaktifkan jika "I currently work here" dicentang | ❌ |
+| **I currently work here** | Checkbox — jika dicentang, End Date otomatis tampil sebagai "Sekarang" | ❌ |
+| **Description** | Deskripsi pekerjaan / tanggung jawab | ❌ |
+
+Tombol **+ Add Experience** untuk menambah entri baru. Tombol 🗑️ untuk menghapus.
+
+---
+
+**Tab 3: Education (Pendidikan)**
+
+Tambah, edit, atau hapus riwayat pendidikan. Tampil di halaman **About** dan **CV**.
+
+| Field | Keterangan | Wajib |
+|---|---|---|
+| **Institution** | Nama sekolah/universitas | ✅ |
+| **Degree** | Jenjang pendidikan (misal: `Sarjana`, `SMA`, `Diploma`) | ✅ |
+| **Field of Study** | Jurusan/program studi (misal: `Akuntansi`, `IPA`) | ✅ |
+| **Start Year** | Tahun mulai (misal: `2019`) | ✅ |
+| **End Year** | Tahun lulus (misal: `2023`) | ✅ |
+| **Description** | Keterangan tambahan (misal: IPK, prestasi, kegiatan) | ❌ |
+
+---
+
+**Tab 4: Skills & Tools**
+
+Kelola keahlian dan teknologi yang dikuasai. Tampil di halaman **About** dan **CV**.
+
+**Bagian Skills (dengan level proficiency):**
+
+| Field | Keterangan |
+|---|---|
+| **Skill Name** | Nama keahlian (misal: `Microsoft Excel`, `SAP`, `React`) |
+| **Category** | Kategori keahlian (misal: `Accounting`, `Technology`, `Soft Skills`) |
+| **Level (1–100)** | Tingkat penguasaan dalam angka — ditampilkan sebagai progress bar di halaman About |
+
+**Bagian Tools & Expertise:**
+
+| Field | Keterangan |
+|---|---|
+| **Tools** | Daftar tools/software yang dikuasai, pisahkan dengan koma. Misal: `SAP, MYOB, Accurate Online, Microsoft Office, Figma, VS Code` |
+| **Expertise Areas** | Area keahlian utama, pisahkan dengan koma. Misal: `Akuntansi Keuangan, Perpajakan, Audit, Web Development` |
+
+> ⚠️ **Penting:** Setelah mengisi/mengubah apapun di Profile Editor, selalu klik tombol **"Save All Changes"** di pojok kanan atas untuk menyimpan perubahan.
+
+---
+
+#### 5. CV Manager (`/admin/cv`)
+
+Kelola **riwayat versi CV** yang pernah dibuat dan disimpan melalui CV Generator.
+
+**Yang bisa dilakukan:**
+- 📄 **Lihat/buka CV tersimpan** — klik "View / PDF" untuk membuka kembali di CV Generator
+- ➕ **Buat CV baru** — klik "Create New CV" untuk membuat versi CV baru dari awal
+- 🗑️ **Hapus CV** — klik "Delete" untuk menghapus versi CV yang tidak diperlukan
+
+Setiap kartu CV menampilkan:
+- Label/nama versi CV
+- Tanggal dibuat
+- Nama lengkap di CV tersebut
+
+> **Hubungan dengan halaman `/cv` publik:** Halaman CV publik (`/cv`) mengambil data langsung dari **Profile Editor**, bukan dari CV Manager. CV Manager digunakan untuk menyimpan versi-versi CV yang sudah dikustomisasi secara manual via CV Generator.
+
+---
+
+#### CV Generator (`/admin/cv/new`)
+
+Buat CV baru dengan data yang bisa dikustomisasi manual, berbeda dari data profil. Data awal otomatis diisi dari profil.
+
+**Tab yang tersedia:**
+
+| Tab | Isi yang Bisa Diedit |
+|---|---|
+| **Personal** | Nama lengkap, email, telepon, lokasi, LinkedIn, GitHub, ringkasan profesional |
+| **Experience** | Perusahaan, posisi, tanggal mulai/selesai, deskripsi pekerjaan per poin |
+| **Education** | Institusi, gelar, bidang studi, tanggal |
+| **Skills** | Kategori skill + daftar skill per kategori |
+
+Tombol di bagian atas:
+- **Save Data** — simpan data CV ke database (muncul di CV Manager)
+- **Download PDF** — generate & download CV sebagai file PDF
+
+Preview CV ditampilkan secara langsung di panel kanan (desktop) dan terupdate otomatis saat kamu mengetik.
+
+---
+
+### Alur Update CV Publik
+
+Untuk memperbarui CV yang tampil di halaman `/cv`:
+
+```
+Profile Editor (dashboard) → Save All Changes → Buka /cv → Download PDF
+```
+
+Tidak perlu input manual — semua data diambil otomatis dari profil.
+
+---
 
 ### URL Penting
 
@@ -673,9 +885,15 @@ Di browser:
 | `/` | Halaman Home | Publik |
 | `/about` | Halaman About | Publik |
 | `/portfolio` | Halaman Portfolio | Publik |
+| `/cv` | Lihat & Download CV ATS | Publik |
 | `/contact` | Halaman Contact | Publik |
-| `/flutceadmin` | Halaman Login | **Rahasia** |
-| `/admin` | Dashboard Admin | Setelah login |
+| `/flutceadmin` | Halaman Login | **Rahasia — tidak di navbar** |
+| `/admin` | Dashboard — Statistik overview | Setelah login |
+| `/admin/portfolio` | Portfolio Manager | Setelah login |
+| `/admin/content` | Content CMS | Setelah login |
+| `/admin/profile` | Profile Editor | Setelah login |
+| `/admin/cv` | CV Manager | Setelah login |
+| `/admin/cv/new` | CV Generator | Setelah login |
 | `/register` | Daftar akun baru | Tersembunyi |
 
 ---
