@@ -9,6 +9,13 @@ import {
   ForgotPasswordBody,
   ResetPasswordBody,
 } from "@workspace/api-zod";
+import {
+  getTransporter,
+  smtpFrom,
+  frontendUrl,
+  verifyEmailHtml,
+  resetPasswordHtml,
+} from "../lib/mailer";
 
 const router = Router();
 
@@ -36,6 +43,25 @@ router.post("/register", async (req: Request, res: Response) => {
       emailVerificationToken: verificationToken,
       emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
+
+    // Send verification email if SMTP is configured
+    const transporter = getTransporter();
+    if (transporter) {
+      const verifyUrl = `${frontendUrl()}/verify-email?token=${verificationToken}`;
+      try {
+        await transporter.sendMail({
+          from:    smtpFrom(),
+          to:      email,
+          subject: "Verifikasi Email — Portfolio",
+          html:    verifyEmailHtml(name, verifyUrl),
+        });
+        req.log.info({ to: email }, "Verification email sent");
+      } catch (mailErr) {
+        req.log.error({ mailErr }, "Failed to send verification email (non-fatal)");
+      }
+    } else {
+      req.log.warn("SMTP not configured — skipping verification email");
+    }
 
     const token = generateToken({ id: user._id.toString(), email: user.email, role: user.role });
     res.status(201).json({ token, user: user.toJSON() });
@@ -114,9 +140,12 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     }
     const { email } = parsed.data;
 
+    // Always return the same message to prevent email enumeration
+    const genericMsg = { message: "If that email exists, a reset link has been sent." };
+
     const user = await User.findOne({ email });
     if (!user) {
-      res.json({ message: "If that email exists, a reset link has been sent." });
+      res.json(genericMsg);
       return;
     }
 
@@ -125,7 +154,26 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
     user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
     await user.save();
 
-    res.json({ message: "If that email exists, a reset link has been sent." });
+    // Send reset email if SMTP is configured
+    const transporter = getTransporter();
+    if (transporter) {
+      const resetUrl = `${frontendUrl()}/reset-password?token=${resetToken}`;
+      try {
+        await transporter.sendMail({
+          from:    smtpFrom(),
+          to:      email,
+          subject: "Reset Password — Portfolio",
+          html:    resetPasswordHtml(user.name, resetUrl),
+        });
+        req.log.info({ to: email }, "Password reset email sent");
+      } catch (mailErr) {
+        req.log.error({ mailErr }, "Failed to send reset email (non-fatal)");
+      }
+    } else {
+      req.log.warn("SMTP not configured — password reset token saved but email not sent");
+    }
+
+    res.json(genericMsg);
   } catch (err) {
     req.log.error({ err }, "Forgot password error");
     res.status(500).json({ message: "Server error" });

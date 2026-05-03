@@ -32,7 +32,7 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 | 📄 **ATS CV Generator** | Buat & download CV PDF yang ATS-friendly |
 | 🗄️ **Auto Seed Data** | Template data otomatis terisi saat database masih kosong |
 | 🗄️ **MongoDB Fleksibel** | In-memory saat dev, MongoDB Atlas saat production |
-| 📧 **Email Notifikasi** | Verifikasi email & reset password via SMTP/Gmail |
+| 📧 **Email Notifikasi** | Verifikasi email, reset password, & notifikasi kontak via Gmail SMTP |
 
 ---
 
@@ -42,7 +42,7 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 - **React 19** + **Vite** + **TypeScript**
 - **Tailwind CSS** + **Shadcn/UI** — komponen UI
 - **Framer Motion** — animasi
-- **@react-pdf/renderer** — generate PDF CV di browser
+- **html2canvas** + **jsPDF** — generate PDF CV di browser (screenshot-based)
 - **TanStack Query** — data fetching & caching
 - **Wouter** — routing SPA
 
@@ -50,7 +50,7 @@ Aplikasi portfolio profesional berbasis web yang berfungsi sebagai **Accounting 
 - **Express 5** + **TypeScript**
 - **MongoDB** + **Mongoose** — database & ODM
 - **JWT** + **Bcrypt** — autentikasi & hashing password
-- **Nodemailer** — email (verifikasi & reset password)
+- **Nodemailer** — email (verifikasi, reset password, notifikasi kontak)
 - **Helmet** + **CORS** — security headers
 - **Pino** — structured logging
 - **mongodb-memory-server** — in-memory MongoDB untuk development
@@ -78,7 +78,8 @@ MyPortofolio/
 │   │       │   ├── Content.ts
 │   │       │   └── CvData.ts
 │   │       ├── routes/              # Route handlers
-│   │       │   ├── auth.ts          # Register, login, verify, reset
+│   │       │   ├── auth.ts          # Register, login, verify, reset (+ email via SMTP)
+│   │       │   ├── contact.ts       # POST /api/contact — kirim email ke pemilik
 │   │       │   ├── profile.ts       # GET/PUT profile publik
 │   │       │   ├── portfolio.ts     # CRUD proyek portfolio
 │   │       │   ├── content.ts       # CMS konten halaman
@@ -87,6 +88,7 @@ MyPortofolio/
 │   │       ├── middlewares/
 │   │       │   └── auth.ts          # JWT middleware + RBAC
 │   │       └── lib/
+│   │           ├── mailer.ts        # Shared nodemailer transporter + email templates
 │   │           ├── mongodb.ts       # Koneksi MongoDB + auto-seed
 │   │           ├── seed.ts          # Template data awal
 │   │           └── logger.ts        # Pino logger
@@ -158,24 +160,25 @@ Semua environment variable yang dibutuhkan:
 | `NODE_ENV` | ✅ | Mode aplikasi | `development` / `production` |
 | `MONGODB_URI` | ❌ | URI MongoDB Atlas (kosong = in-memory) | `mongodb+srv://...` |
 | `JWT_SECRET` | ✅ | Kunci rahasia untuk token login | String acak 64 karakter |
-| `CORS_ORIGIN` | ✅ | Domain frontend yang diizinkan | `https://myportofolio.flutce.app` |
-| `SMTP_HOST` | ❌ | Server SMTP untuk kirim email | `smtp.gmail.com` |
-| `SMTP_PORT` | ❌ | Port SMTP | `587` |
-| `SMTP_USER` | ❌ | Email pengirim | `kamu@gmail.com` |
-| `SMTP_PASS` | ❌ | App Password Gmail (bukan password biasa) | `xxxx xxxx xxxx xxxx` |
-| `EMAIL_FROM` | ❌ | Nama & email pengirim | `kamu@gmail.com` |
-| `SESSION_SECRET` | ❌ | Secret untuk session (jika dipakai) | String acak 32 karakter |
+| `SESSION_SECRET` | ✅ | Secret untuk session | String acak 32 karakter |
+| `CORS_ORIGIN` | ✅ | Domain frontend yang diizinkan (tanpa trailing slash) | `https://myportofolio.flutce.app` |
+| `SMTP_EMAIL` | ❌ | Alamat Gmail pengirim | `kamu@gmail.com` |
+| `SMTP_APP_PASSWORD` | ❌ | Gmail App Password 16 karakter (bukan password biasa) | `abcdefghijklmnop` |
+| `CONTACT_TO_EMAIL` | ❌ | Email penerima pesan kontak (default = `SMTP_EMAIL`) | `kamu@gmail.com` |
 
-**Cara generate JWT_SECRET:**
+> Variabel SMTP digunakan bersama oleh tiga fitur: **verifikasi email** saat register,
+> **link reset password**, dan **notifikasi pesan** dari form Contact.
+
+**Cara generate JWT_SECRET / SESSION_SECRET:**
 ```bash
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
 **Cara buat Gmail App Password:**
-1. Aktifkan 2FA di akun Google kamu
+1. Aktifkan 2FA: https://myaccount.google.com/security
 2. Buka: https://myaccount.google.com/apppasswords
-3. Pilih **"Mail"** → **"Other"** → tulis nama bebas → **Generate**
-4. Salin 16-digit password yang muncul — itulah `SMTP_PASS`
+3. Pilih **App: Mail** → **Device: Other** → tulis nama bebas → **Generate**
+4. Salin 16-karakter yang muncul (tanpa spasi) — itulah `SMTP_APP_PASSWORD`
 
 ---
 
@@ -223,12 +226,12 @@ JWT_SECRET=isi-dengan-string-acak-64-karakter
 # ── CORS ────────────────────────────────────────────────────────────
 CORS_ORIGIN=http://localhost:5173
 
-# ── Email (opsional, untuk fitur verifikasi email) ───────────────────
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=email-kamu@gmail.com
-SMTP_PASS=app-password-16-digit
-EMAIL_FROM=email-kamu@gmail.com
+# ── Email / SMTP (opsional) ──────────────────────────────────────────
+# Digunakan untuk: verifikasi email, reset password, notifikasi kontak
+# Cara setup: https://myaccount.google.com/apppasswords
+SMTP_EMAIL=email-kamu@gmail.com
+SMTP_APP_PASSWORD=abcdefghijklmnop
+CONTACT_TO_EMAIL=email-kamu@gmail.com
 ```
 
 ### Langkah 4 — Buat File Environment Frontend
@@ -332,13 +335,13 @@ Klik **ikon gembok (Secrets)** di sidebar kiri Replit, lalu tambahkan secrets be
 
 | Secret Key | Nilai |
 |---|---|
-| `JWT_SECRET` | Generate dengan `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
+| `JWT_SECRET` | Generate: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
 | `SESSION_SECRET` | Generate dengan perintah yang sama |
 | `MONGODB_URI` | *(Opsional)* URI MongoDB Atlas — kosongkan untuk pakai in-memory |
-| `CORS_ORIGIN` | URL preview Replit kamu (misal: `https://xxx.replit.app`) |
-| `SMTP_USER` | Email Gmail kamu |
-| `SMTP_PASS` | App Password Gmail 16-digit |
-| `EMAIL_FROM` | Email Gmail kamu |
+| `CORS_ORIGIN` | URL preview Replit kamu (misal: `https://xxx.replit.dev`) — tanpa trailing slash |
+| `SMTP_EMAIL` | Alamat Gmail kamu |
+| `SMTP_APP_PASSWORD` | Gmail App Password 16-karakter (tanpa spasi) |
+| `CONTACT_TO_EMAIL` | Email tujuan penerima pesan kontak (bisa sama dengan `SMTP_EMAIL`) |
 
 > **Tips:** Untuk mendapat URL Replit kamu, lihat di preview pane — formatnya `https://xxx.replit.dev` atau `https://xxx.replit.app`.
 
@@ -386,6 +389,7 @@ Checklist testing sebelum deploy ke production:
 - [ ] Halaman About menampilkan pengalaman dan pendidikan
 - [ ] Halaman Portfolio menampilkan daftar proyek
 - [ ] Halaman Contact menampilkan form dan info kontak
+- [ ] Form Contact berhasil mengirim email notifikasi (jika SMTP sudah diset)
 - [ ] Login via `/flutceadmin` berhasil masuk ke dashboard
 - [ ] Admin dapat tambah/edit/hapus proyek di Portfolio Manager
 - [ ] Admin dapat edit profil di Profile Editor
@@ -425,10 +429,10 @@ Buka **Secrets** di Replit, pastikan semua variable berikut sudah ada dan nilain
 | `JWT_SECRET` | String acak 64 karakter (berbeda dari development) |
 | `SESSION_SECRET` | String acak 32 karakter (berbeda dari development) |
 | `MONGODB_URI` | URI MongoDB Atlas (wajib untuk data permanen) |
-| `CORS_ORIGIN` | URL domain production kamu (misal: `https://myportofolio.flutce.app`) |
-| `SMTP_USER` | Email Gmail |
-| `SMTP_PASS` | App Password Gmail |
-| `EMAIL_FROM` | Email Gmail |
+| `CORS_ORIGIN` | URL domain production kamu — tanpa trailing slash (misal: `https://myportofolio.flutce.app`) |
+| `SMTP_EMAIL` | Alamat Gmail pengirim |
+| `SMTP_APP_PASSWORD` | Gmail App Password 16-karakter (tanpa spasi) |
+| `CONTACT_TO_EMAIL` | Email tujuan penerima pesan kontak |
 
 #### Langkah 2 — Dapatkan MONGODB_URI dari Atlas
 
@@ -513,11 +517,9 @@ Lakukan ini **sebelum** deploy backend maupun frontend.
    | `MONGODB_URI` | URI Atlas dari Bagian 1 |
    | `JWT_SECRET` | String acak 64 karakter |
    | `CORS_ORIGIN` | *(isi setelah deploy frontend — update nanti)* |
-   | `SMTP_HOST` | `smtp.gmail.com` |
-   | `SMTP_PORT` | `587` |
-   | `SMTP_USER` | email Gmail kamu |
-   | `SMTP_PASS` | App Password Gmail 16-digit |
-   | `EMAIL_FROM` | email Gmail kamu |
+   | `SMTP_EMAIL` | alamat Gmail kamu |
+   | `SMTP_APP_PASSWORD` | App Password Gmail 16-karakter (tanpa spasi) |
+   | `CONTACT_TO_EMAIL` | email penerima pesan kontak (bisa sama dengan `SMTP_EMAIL`) |
 
 6. Klik **"Deploy"** — tunggu hingga status **"Success"**
 7. Di tab **"Settings"** → **"Networking"** → klik **"Generate Domain"**
@@ -1010,11 +1012,14 @@ Error: MongoServerSelectionError: connection timed out
 2. Edit token → centang scope: `repo` ✅ dan `workflow` ✅
 3. Salin token baru → update di Replit Secrets
 
-### Email verifikasi tidak terkirim
+### Email tidak terkirim (verifikasi, reset password, atau kontak)
+**Penyebab umum:** Secrets SMTP belum diset atau salah.
 **Solusi:**
-1. Pastikan `SMTP_PASS` adalah **App Password** Google (16 digit), bukan password akun Gmail biasa
-2. Pastikan akun Google sudah aktifkan 2FA
-3. Buat App Password baru di: https://myaccount.google.com/apppasswords
+1. Pastikan `SMTP_APP_PASSWORD` adalah **App Password** Google (16 karakter), bukan password akun Gmail biasa
+2. Pastikan akun Google sudah aktifkan 2FA di: https://myaccount.google.com/security
+3. Buat App Password baru di: https://myaccount.google.com/apppasswords → App: Mail → Device: Other
+4. Cek log API server — jika tertulis `SMTP not configured` berarti secrets belum terbaca
+5. Nama secret di Replit harus **persis**: `SMTP_EMAIL`, `SMTP_APP_PASSWORD`, `CONTACT_TO_EMAIL`
 
 ### CORS error di browser
 ```
