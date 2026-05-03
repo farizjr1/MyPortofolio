@@ -10,6 +10,7 @@ export default function Footer() {
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/portfolio", label: "Portfolio" },
+    { href: "/cv", label: "CV" },
     { href: "/contact", label: "Contact" },
   ];
 

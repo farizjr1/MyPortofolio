@@ -13,6 +13,7 @@ import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Portfolio from "@/pages/Portfolio";
 import Contact from "@/pages/Contact";
+import CvPage from "@/pages/Cv";
 import NotFound from "@/pages/not-found";
 
 // Auth Pages
@@ -47,6 +48,7 @@ function PublicRoutes() {
         <Route path="/about" component={About} />
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/contact" component={Contact} />
+        <Route path="/cv" component={CvPage} />
         <Route component={NotFound} />
       </Switch>
     </PublicLayout>
