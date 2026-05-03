@@ -1,59 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
-import { Download, Printer, ArrowLeft, Mail, Phone, MapPin, Linkedin, Github, Globe } from "lucide-react";
+import { Download, Printer, ArrowLeft, Mail, Phone, MapPin, Linkedin, Github, Globe, Loader2 } from "lucide-react";
 import { Link } from "wouter";
-import { pdf, Document, Page, Text, View, StyleSheet, Link as PdfLink } from "@react-pdf/renderer";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 
-// ─── PDF Styles (ATS-Optimized) ──────────────────────────────────────────────
-const pdfStyles = StyleSheet.create({
-  page: {
-    padding: "18mm 16mm",
-    fontFamily: "Helvetica",
-    fontSize: 10,
-    color: "#111",
-    lineHeight: 1.45,
-    backgroundColor: "#fff",
-  },
-  // Header
-  headerName: { fontSize: 22, fontFamily: "Helvetica-Bold", marginBottom: 4, letterSpacing: 0.5 },
-  headerTitle: { fontSize: 11, color: "#444", marginBottom: 6 },
-  headerContact: { flexDirection: "row", flexWrap: "wrap", gap: 10, fontSize: 9, color: "#333" },
-  headerContactItem: { flexDirection: "row", alignItems: "center", gap: 3 },
-  divider: { height: 1.5, backgroundColor: "#111", marginTop: 8, marginBottom: 12 },
-  // Section
-  sectionTitle: {
-    fontSize: 11,
-    fontFamily: "Helvetica-Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-    borderBottomWidth: 1,
-    borderBottomColor: "#111",
-    paddingBottom: 2,
-    marginBottom: 7,
-    marginTop: 12,
-  },
-  // Summary
-  summary: { fontSize: 9.5, lineHeight: 1.5, color: "#222", textAlign: "justify" },
-  // Experience
-  expRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 1 },
-  expCompany: { fontSize: 10.5, fontFamily: "Helvetica-Bold" },
-  expDate: { fontSize: 9, color: "#444" },
-  expPosition: { fontSize: 9.5, fontFamily: "Helvetica-Oblique", color: "#333", marginBottom: 3 },
-  bullet: { fontSize: 9.5, marginBottom: 1.5, paddingLeft: 12 },
-  expBlock: { marginBottom: 9 },
-  // Education
-  eduRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 },
-  eduLeft: { flex: 1 },
-  eduInstitution: { fontSize: 10.5, fontFamily: "Helvetica-Bold" },
-  eduDegree: { fontSize: 9.5, color: "#333" },
-  eduDate: { fontSize: 9, color: "#444" },
-  // Skills
-  skillRow: { flexDirection: "row", marginBottom: 3 },
-  skillLabel: { fontFamily: "Helvetica-Bold", width: "22%", fontSize: 9.5 },
-  skillValue: { width: "78%", fontSize: 9.5, color: "#222" },
-});
-
+// ─── Data Builder ─────────────────────────────────────────────────────────────
 function buildCvData(profile: any) {
   return {
     name: profile?.name || "Nama Lengkap",
@@ -73,117 +26,11 @@ function buildCvData(profile: any) {
   };
 }
 
-// ─── PDF Document ─────────────────────────────────────────────────────────────
-function ATSPdfDocument({ profile }: { profile: any }) {
-  const d = buildCvData(profile);
-  const skillsByCategory = d.skills.reduce((acc: any, s: any) => {
-    if (!acc[s.category]) acc[s.category] = [];
-    acc[s.category].push(s.name);
-    return acc;
-  }, {} as Record<string, string[]>);
-
-  return (
-    <Document title={`${d.name} — CV`} author={d.name} subject="Curriculum Vitae">
-      <Page size="A4" style={pdfStyles.page}>
-        {/* Header */}
-        <Text style={pdfStyles.headerName}>{d.name.toUpperCase()}</Text>
-        {d.title && <Text style={pdfStyles.headerTitle}>{d.title}</Text>}
-        <View style={pdfStyles.headerContact}>
-          {d.email && <Text>{d.email}</Text>}
-          {d.phone && <Text>{d.phone}</Text>}
-          {d.location && <Text>{d.location}</Text>}
-          {d.linkedin && <Text>{d.linkedin.replace("https://", "")}</Text>}
-          {d.github && <Text>{d.github.replace("https://", "")}</Text>}
-        </View>
-        <View style={pdfStyles.divider} />
-
-        {/* Summary */}
-        {d.summary && (
-          <View>
-            <Text style={pdfStyles.sectionTitle}>Profil Singkat</Text>
-            <Text style={pdfStyles.summary}>{d.summary}</Text>
-          </View>
-        )}
-
-        {/* Experience */}
-        {d.experience.length > 0 && (
-          <View>
-            <Text style={pdfStyles.sectionTitle}>Pengalaman Kerja</Text>
-            {d.experience.map((exp: any, i: number) => (
-              <View key={i} style={pdfStyles.expBlock} wrap={false}>
-                <View style={pdfStyles.expRow}>
-                  <Text style={pdfStyles.expCompany}>{exp.company}</Text>
-                  <Text style={pdfStyles.expDate}>
-                    {exp.startDate} – {exp.isCurrent ? "Sekarang" : exp.endDate || ""}
-                  </Text>
-                </View>
-                <Text style={pdfStyles.expPosition}>{exp.position}</Text>
-                {exp.description && (
-                  <Text style={pdfStyles.bullet}>• {exp.description}</Text>
-                )}
-                {exp.technologies?.length > 0 && (
-                  <Text style={[pdfStyles.bullet, { color: "#555" }]}>
-                    Teknologi: {exp.technologies.join(", ")}
-                  </Text>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Education */}
-        {d.education.length > 0 && (
-          <View>
-            <Text style={pdfStyles.sectionTitle}>Pendidikan</Text>
-            {d.education.map((edu: any, i: number) => (
-              <View key={i} style={pdfStyles.eduRow} wrap={false}>
-                <View style={pdfStyles.eduLeft}>
-                  <Text style={pdfStyles.eduInstitution}>{edu.institution}</Text>
-                  <Text style={pdfStyles.eduDegree}>
-                    {edu.degree}{edu.field ? ` — ${edu.field}` : ""}
-                  </Text>
-                  {edu.description && (
-                    <Text style={[pdfStyles.eduDegree, { marginTop: 2 }]}>{edu.description}</Text>
-                  )}
-                </View>
-                <Text style={pdfStyles.eduDate}>{edu.startYear} – {edu.endYear}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Skills */}
-        {Object.keys(skillsByCategory).length > 0 && (
-          <View>
-            <Text style={pdfStyles.sectionTitle}>Keahlian</Text>
-            {Object.entries(skillsByCategory).map(([cat, names]: [string, any], i) => (
-              <View key={i} style={pdfStyles.skillRow}>
-                <Text style={pdfStyles.skillLabel}>{cat}</Text>
-                <Text style={pdfStyles.skillValue}>{(names as string[]).join(" • ")}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Tools */}
-        {d.tools.length > 0 && (
-          <View>
-            <Text style={pdfStyles.sectionTitle}>Tools & Teknologi</Text>
-            <View style={pdfStyles.skillRow}>
-              <Text style={pdfStyles.skillValue}>{d.tools.join(" • ")}</Text>
-            </View>
-          </View>
-        )}
-      </Page>
-    </Document>
-  );
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Section Title ─────────────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 mt-7 mb-3">
-      <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-gray-800 whitespace-nowrap">
+      <h2 className="cv-section-title text-[10.5pt] font-bold uppercase tracking-[0.14em] text-gray-900 whitespace-nowrap">
         {children}
       </h2>
       <div className="flex-1 h-[1.5px] bg-gray-900" />
@@ -191,53 +38,48 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── HTML Live Preview (mirrors PDF layout) ───────────────────────────────────
-function CvPreview({ profile }: { profile: any }) {
+// ─── CV Preview (HTML — used both on screen and captured for PDF) ──────────────
+export function CvPreview({ profile, forExport = false }: { profile: any; forExport?: boolean }) {
   const d = buildCvData(profile);
-  const skillsByCategory = d.skills.reduce((acc: any, s: any) => {
-    if (!acc[s.category]) acc[s.category] = [];
-    acc[s.category].push(s.name);
+
+  const skillsByCategory = (d.skills as any[]).reduce((acc: Record<string, string[]>, s: any) => {
+    const cat = s.category || "Lainnya";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(s.name);
     return acc;
-  }, {} as Record<string, string[]>);
+  }, {});
 
   const contactItems = [
-    d.email && { icon: <Mail className="h-3 w-3" />, text: d.email, href: `mailto:${d.email}` },
-    d.phone && { icon: <Phone className="h-3 w-3" />, text: d.phone },
-    d.location && { icon: <MapPin className="h-3 w-3" />, text: d.location },
-    d.linkedin && { icon: <Linkedin className="h-3 w-3" />, text: d.linkedin.replace("https://www.", "").replace("https://", ""), href: d.linkedin },
-    d.github && { icon: <Github className="h-3 w-3" />, text: d.github.replace("https://", ""), href: d.github },
-    d.website && { icon: <Globe className="h-3 w-3" />, text: d.website.replace("https://", ""), href: d.website },
+    d.email    && { icon: <Mail    className="h-[10px] w-[10px]" />, text: d.email,    href: `mailto:${d.email}` },
+    d.phone    && { icon: <Phone   className="h-[10px] w-[10px]" />, text: d.phone },
+    d.location && { icon: <MapPin  className="h-[10px] w-[10px]" />, text: d.location },
+    d.linkedin && { icon: <Linkedin className="h-[10px] w-[10px]" />, text: d.linkedin.replace("https://www.", "").replace("https://", ""), href: d.linkedin },
+    d.github   && { icon: <Github  className="h-[10px] w-[10px]" />, text: d.github.replace("https://", ""), href: d.github },
+    d.website  && { icon: <Globe   className="h-[10px] w-[10px]" />, text: d.website.replace("https://", ""), href: d.website },
   ].filter(Boolean) as any[];
 
+  const base: React.CSSProperties = forExport
+    ? { width: "794px", minHeight: "1123px", padding: "68px 60px", fontSize: "10pt", lineHeight: 1.5, fontFamily: "Arial, Helvetica, sans-serif", backgroundColor: "#fff", color: "#111", boxSizing: "border-box" }
+    : { width: "210mm", minHeight: "297mm", padding: "18mm 16mm", fontSize: "10pt", lineHeight: 1.45, boxSizing: "border-box" };
+
   return (
-    <div
-      id="cv-preview"
-      className="bg-white text-gray-900 font-sans"
-      style={{
-        width: "210mm",
-        minHeight: "297mm",
-        padding: "18mm 16mm",
-        fontSize: "10pt",
-        lineHeight: 1.45,
-        boxSizing: "border-box",
-      }}
-    >
+    <div id="cv-preview" className="bg-white text-gray-900" style={base}>
       {/* ── Header ── */}
-      <div className="mb-0.5">
-        <h1 className="text-[22pt] font-bold tracking-wide uppercase leading-tight">
+      <div>
+        <h1 style={{ fontSize: "22pt", fontWeight: 800, letterSpacing: "0.03em", textTransform: "uppercase", lineHeight: 1.15, marginBottom: "4px", color: "#111" }}>
           {d.name}
         </h1>
         {d.title && (
-          <p className="text-[11pt] text-gray-500 mt-0.5">{d.title}</p>
+          <p style={{ fontSize: "11pt", color: "#555", marginTop: "2px", marginBottom: "4px" }}>{d.title}</p>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[9pt] text-gray-600">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "14px 20px", marginTop: "8px", fontSize: "8.5pt", color: "#444" }}>
         {contactItems.map((item, i) => (
-          <div key={i} className="flex items-center gap-1">
-            <span className="text-gray-500">{item.icon}</span>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span style={{ color: "#666" }}>{item.icon}</span>
             {item.href ? (
-              <a href={item.href} className="hover:text-blue-700 transition-colors">{item.text}</a>
+              <a href={item.href} style={{ color: "#333", textDecoration: "none" }}>{item.text}</a>
             ) : (
               <span>{item.text}</span>
             )}
@@ -245,38 +87,38 @@ function CvPreview({ profile }: { profile: any }) {
         ))}
       </div>
 
-      <div className="h-[1.5px] bg-gray-900 mt-2 mb-0" />
+      <div style={{ height: "1.5px", backgroundColor: "#111", marginTop: "10px", marginBottom: "2px" }} />
 
       {/* ── Summary ── */}
       {d.summary && (
         <div>
           <SectionTitle>Profil Singkat</SectionTitle>
-          <p className="text-[9.5pt] text-justify leading-relaxed text-gray-700">{d.summary}</p>
+          <p style={{ fontSize: "9.5pt", textAlign: "justify", lineHeight: 1.6, color: "#333" }}>{d.summary}</p>
         </div>
       )}
 
       {/* ── Experience ── */}
-      {d.experience.length > 0 && (
+      {(d.experience as any[]).length > 0 && (
         <div>
           <SectionTitle>Pengalaman Kerja</SectionTitle>
-          <div className="space-y-4">
-            {d.experience.map((exp: any, i: number) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {(d.experience as any[]).map((exp: any, i: number) => (
               <div key={i}>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[10.5pt] font-bold">{exp.company}</span>
-                  <span className="text-[9pt] text-gray-500 shrink-0 ml-2">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span style={{ fontSize: "10.5pt", fontWeight: 700, color: "#111" }}>{exp.company}</span>
+                  <span style={{ fontSize: "8.5pt", color: "#666", flexShrink: 0, marginLeft: "8px" }}>
                     {exp.startDate} – {exp.isCurrent ? "Sekarang" : exp.endDate || ""}
                   </span>
                 </div>
-                <div className="text-[9.5pt] italic text-gray-500 mb-1">{exp.position}</div>
+                <div style={{ fontSize: "9.5pt", fontStyle: "italic", color: "#555", marginBottom: "4px", marginTop: "1px" }}>{exp.position}</div>
                 {exp.description && (
-                  <p className="text-[9.5pt] text-gray-700 leading-relaxed pl-3 border-l-2 border-gray-200">
-                    {exp.description}
-                  </p>
+                  <div style={{ borderLeft: "2px solid #ddd", paddingLeft: "10px", marginTop: "4px" }}>
+                    <p style={{ fontSize: "9.5pt", color: "#333", lineHeight: 1.55 }}>• {exp.description}</p>
+                  </div>
                 )}
                 {exp.technologies?.length > 0 && (
-                  <p className="text-[8.5pt] text-gray-400 mt-1 pl-3">
-                    <span className="font-semibold text-gray-500">Tech:</span> {exp.technologies.join(", ")}
+                  <p style={{ fontSize: "8.5pt", color: "#777", marginTop: "4px", paddingLeft: "12px" }}>
+                    <strong style={{ color: "#555" }}>Teknologi:</strong> {exp.technologies.join(", ")}
                   </p>
                 )}
               </div>
@@ -286,22 +128,22 @@ function CvPreview({ profile }: { profile: any }) {
       )}
 
       {/* ── Education ── */}
-      {d.education.length > 0 && (
+      {(d.education as any[]).length > 0 && (
         <div>
           <SectionTitle>Pendidikan</SectionTitle>
-          <div className="space-y-3">
-            {d.education.map((edu: any, i: number) => (
-              <div key={i} className="flex justify-between items-start">
-                <div>
-                  <div className="text-[10.5pt] font-bold">{edu.institution}</div>
-                  <div className="text-[9.5pt] text-gray-600">
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {(d.education as any[]).map((edu: any, i: number) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "10.5pt", fontWeight: 700, color: "#111" }}>{edu.institution}</div>
+                  <div style={{ fontSize: "9.5pt", color: "#555", marginTop: "1px" }}>
                     {edu.degree}{edu.field ? ` — ${edu.field}` : ""}
                   </div>
                   {edu.description && (
-                    <div className="text-[9pt] text-gray-500 mt-0.5">{edu.description}</div>
+                    <div style={{ fontSize: "9pt", color: "#666", marginTop: "2px" }}>{edu.description}</div>
                   )}
                 </div>
-                <span className="text-[9pt] text-gray-500 shrink-0 ml-2">
+                <span style={{ fontSize: "8.5pt", color: "#666", flexShrink: 0, marginLeft: "8px" }}>
                   {edu.startYear} – {edu.endYear}
                 </span>
               </div>
@@ -310,15 +152,15 @@ function CvPreview({ profile }: { profile: any }) {
         </div>
       )}
 
-      {/* ── Skills by Category ── */}
+      {/* ── Skills ── */}
       {Object.keys(skillsByCategory).length > 0 && (
         <div>
           <SectionTitle>Keahlian</SectionTitle>
-          <div className="space-y-1.5">
-            {Object.entries(skillsByCategory).map(([cat, names]: [string, any]) => (
-              <div key={cat} className="flex items-baseline gap-2 text-[9.5pt]">
-                <span className="font-bold text-gray-800 w-28 shrink-0">{cat}</span>
-                <span className="text-gray-600">{(names as string[]).join(" • ")}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            {Object.entries(skillsByCategory).map(([cat, names]) => (
+              <div key={cat} style={{ display: "flex", alignItems: "baseline", gap: "8px", fontSize: "9.5pt" }}>
+                <span style={{ fontWeight: 700, color: "#222", minWidth: "110px", flexShrink: 0 }}>{cat}</span>
+                <span style={{ color: "#444" }}>{(names as string[]).join(" • ")}</span>
               </div>
             ))}
           </div>
@@ -326,14 +168,21 @@ function CvPreview({ profile }: { profile: any }) {
       )}
 
       {/* ── Tools ── */}
-      {d.tools.length > 0 && (
+      {(d.tools as string[]).length > 0 && (
         <div>
-          <SectionTitle>Tools & Teknologi</SectionTitle>
-          <div className="flex flex-wrap gap-1.5">
-            {d.tools.map((tool: string) => (
+          <SectionTitle>Tools &amp; Teknologi</SectionTitle>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px 8px" }}>
+            {(d.tools as string[]).map((tool) => (
               <span
                 key={tool}
-                className="text-[8.5pt] px-2 py-0.5 border border-gray-300 rounded text-gray-600"
+                style={{
+                  fontSize: "8.5pt",
+                  padding: "2px 8px",
+                  border: "1px solid #ccc",
+                  borderRadius: "3px",
+                  color: "#444",
+                  backgroundColor: "#fafafa",
+                }}
               >
                 {tool}
               </span>
@@ -343,10 +192,10 @@ function CvPreview({ profile }: { profile: any }) {
       )}
 
       {/* ── Expertise ── */}
-      {d.expertiseAreas.length > 0 && (
+      {(d.expertiseAreas as string[]).length > 0 && (
         <div>
           <SectionTitle>Area Keahlian</SectionTitle>
-          <p className="text-[9.5pt] text-gray-600">{d.expertiseAreas.join(" • ")}</p>
+          <p style={{ fontSize: "9.5pt", color: "#444" }}>{(d.expertiseAreas as string[]).join(" • ")}</p>
         </div>
       )}
     </div>
@@ -356,47 +205,90 @@ function CvPreview({ profile }: { profile: any }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CvPage() {
   const { data: profile, isLoading } = useGetProfile();
+  const exportRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const handleDownload = async () => {
-    if (!profile) return;
+    if (!profile || !exportRef.current) return;
+    setDownloading(true);
     try {
-      const blob = await pdf(<ATSPdfDocument profile={profile} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${(profile.name || "CV").replace(/\s+/g, "_")}_ATS_CV.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // Briefly show the hidden export node so html2canvas can capture it
+      exportRef.current.style.display = "block";
+      await new Promise(r => setTimeout(r, 120)); // let browser paint
+
+      const canvas = await html2canvas(exportRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        width: 794,
+        windowWidth: 794,
+      });
+
+      exportRef.current.style.display = "none";
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();   // 595.28 pt
+      const pageH = pdf.internal.pageSize.getHeight();  // 841.89 pt
+
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const ratio = pageW / imgW;
+      const scaledH = imgH * ratio;
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.97);
+
+      if (scaledH <= pageH) {
+        pdf.addImage(imgData, "JPEG", 0, 0, pageW, scaledH);
+      } else {
+        // Multi-page: slice canvas per A4 page
+        let yOffset = 0;
+        while (yOffset < imgH) {
+          const sliceH = Math.min(imgH - yOffset, Math.floor(pageH / ratio));
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = imgW;
+          sliceCanvas.height = sliceH;
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, imgW, sliceH);
+          ctx.drawImage(canvas, 0, -yOffset);
+          const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.97);
+          if (yOffset > 0) pdf.addPage();
+          pdf.addImage(sliceData, "JPEG", 0, 0, pageW, sliceH * ratio);
+          yOffset += sliceH;
+        }
+      }
+
+      pdf.save(`${(profile.name || "CV").replace(/\s+/g, "_")}_ATS_CV.pdf`);
     } catch (e) {
-      console.error("PDF generation error", e);
+      console.error("PDF error", e);
+    } finally {
+      if (exportRef.current) exportRef.current.style.display = "none";
+      setDownloading(false);
     }
   };
 
   const handlePrint = () => {
     const el = document.getElementById("cv-preview");
     if (!el) return;
-    const w = window.open("", "_blank", "width=900,height=700");
+    const w = window.open("", "_blank", "width=900,height=750");
     if (!w) return;
-    w.document.write(`
-      <html><head><title>CV — ${profile?.name || ""}</title>
+    w.document.write(`<!DOCTYPE html><html><head><title>CV — ${profile?.name || ""}</title>
       <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: Arial, Helvetica, sans-serif; }
-        @media print { @page { size: A4; margin: 0; } }
-      </style></head>
-      <body>${el.outerHTML}</body></html>
-    `);
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#111}
+        @media print{@page{size:A4;margin:0}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+      </style>
+    </head><body>${el.outerHTML}</body></html>`);
     w.document.close();
-    w.onload = () => { w.print(); };
+    w.onload = () => { w.focus(); w.print(); };
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ── Top Action Bar ── */}
+      {/* ── Sticky Action Bar ── */}
       <div className="sticky top-16 z-40 w-full border-b border-border/30 bg-background/90 backdrop-blur-md">
         <div className="container max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -421,17 +313,19 @@ export default function CvPage() {
             </button>
             <button
               onClick={handleDownload}
-              disabled={isLoading}
-              className="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 transition-all duration-200 disabled:opacity-50"
+              disabled={isLoading || downloading}
+              className="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 transition-all duration-200 disabled:opacity-60"
             >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Download PDF</span>
+              {downloading
+                ? <><Loader2 className="h-4 w-4 animate-spin" /><span className="hidden sm:inline">Generating…</span></>
+                : <><Download className="h-4 w-4" /><span className="hidden sm:inline">Download PDF</span></>
+              }
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── CV Preview ── */}
+      {/* ── Visible CV Preview ── */}
       <div className="py-10 px-4">
         {isLoading ? (
           <div className="max-w-[210mm] mx-auto bg-white rounded-xl shadow-2xl h-[297mm] flex items-center justify-center">
@@ -451,13 +345,32 @@ export default function CvPage() {
           </motion.div>
         )}
 
-        {/* ATS Tips */}
+        {/* ATS Note */}
         <div className="max-w-[210mm] mx-auto mt-6 p-4 rounded-xl border border-border/30 bg-card/40 backdrop-blur-sm">
           <p className="text-xs text-muted-foreground/70 text-center">
-            ✅ <strong className="text-muted-foreground">ATS-Friendly:</strong> Format single-column, teks murni, tanpa tabel, tanpa gambar — dioptimalkan untuk sistem pelacakan pelamar kerja.
-            &nbsp;·&nbsp; Edit data di <Link href="/about"><span className="text-primary underline decoration-dotted cursor-pointer hover:text-primary/80">halaman About</span></Link> untuk memperbarui CV secara otomatis.
+            ✅ <strong className="text-muted-foreground">ATS-Friendly</strong> · PDF yang didownload identik dengan tampilan di atas ·{" "}
+            Edit data di{" "}
+            <Link href="/admin/profile">
+              <span className="text-primary underline decoration-dotted cursor-pointer hover:text-primary/80">Profile Editor</span>
+            </Link>{" "}
+            untuk update CV secara otomatis.
           </p>
         </div>
+      </div>
+
+      {/* ── Hidden Export Node (794px wide = A4 at 96dpi) ── */}
+      <div
+        ref={exportRef}
+        style={{
+          display: "none",
+          position: "fixed",
+          top: 0,
+          left: "-9999px",
+          zIndex: -1,
+          backgroundColor: "#fff",
+        }}
+      >
+        {!isLoading && <CvPreview profile={profile} forExport />}
       </div>
     </div>
   );
