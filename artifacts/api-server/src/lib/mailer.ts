@@ -9,8 +9,16 @@ export function getTransporter(): Transporter | null {
   if (!user || !pass) return null;
   if (!_transporter) {
     _transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, //TLS
       auth: { user, pass },
+      tls: {
+        rejectUnautorirezed: false
+      },
+      connectionTimeout: 10000, 
+      greetingTimeout: 10000,
+      socketaTimeout: 10000,
     });
   }
   return _transporter;
