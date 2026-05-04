@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Mail, MapPin, Phone, Send, Github, Linkedin, Globe, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Contact() {
   const { data: profile } = useGetProfile();
   const { toast } = useToast();
@@ -29,7 +31,7 @@ export default function Contact() {
     };
 
     try {
-      const res = await fetch("/api/contact", {
+      const res = await fetch('${API_URL}/contact' , {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
