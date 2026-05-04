@@ -9,9 +9,9 @@ export function getTransporter(): Transporter | null {
   if (!user || !pass) return null;
   if (!_transporter) {
     _transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: "smtp.resend.com",
       port: 587,
-      secure: false, //TLS
+      secure: true, //TLS
       auth: { user, pass },
       tls: {
         rejectUnauthorized: false
