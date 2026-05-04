@@ -11,14 +11,14 @@ export function getTransporter(): Transporter | null {
     _transporter = nodemailer.createTransport({
       host: "smtp.resend.com",
       port: 587,
-      secure: true, //TLS
+      secure: false, //TLS
       auth: { user, pass },
       tls: {
         rejectUnauthorized: false
       },
       connectionTimeout: 10000, 
       greetingTimeout: 10000,
-      socketaTimeout: 10000,
+      socketTimeout: 10000,
     });
   }
   return _transporter;
