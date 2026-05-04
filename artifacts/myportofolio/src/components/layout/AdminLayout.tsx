@@ -115,6 +115,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <span className="font-semibold">Admin Panel</span>
           <Link href="/" className="text-sm text-primary">View Site</Link>
         </header>
+        <nav 
+‎    className="flex overflow-x-auto gap-2 px-4 py-2 border-b border-border bg-background"
+‎    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+‎  >
+‎    {sidebarLinks.map((link) => {
+‎      const isActive = location === link.href || (link.href !== "/admin" && location.startsWith(link.href));
+‎      const Icon = link.icon;
+‎      return (
+‎        <Link
+‎          key={link.href}
+‎          href={link.href}
+‎          className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs whitespace-nowrap ${
+‎            isActive 
+‎              ? "bg-primary text-primary-foreground font-medium" 
+‎              : "bg-muted text-muted-foreground"
+‎          }`}
+‎        >
+‎          <Icon className="h-3.5 w-3.5" />
+‎          {link.label}
+‎        </Link>
+‎      );
+‎    })}
+‎  </nav>
+‎</div>
         
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-5xl mx-auto">
