@@ -10,7 +10,7 @@ export function getTransporter(): Transporter | null {
   if (!_transporter) {
     _transporter = nodemailer.createTransport({
       host: "smtp.resend.com",
-      port: 465,
+      port: 2465,
       secure: true, //TLS
       auth: { user, pass },
     });
