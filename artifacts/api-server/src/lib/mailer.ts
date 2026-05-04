@@ -14,7 +14,7 @@ export function getTransporter(): Transporter | null {
       secure: false, //TLS
       auth: { user, pass },
       tls: {
-        rejectUnautorirezed: false
+        rejectUnauthorized: false
       },
       connectionTimeout: 10000, 
       greetingTimeout: 10000,
