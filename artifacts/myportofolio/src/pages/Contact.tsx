@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, MapPin, Phone, Send, Github, Linkedin, Globe, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "";
 
 export default function Contact() {
   const { data: profile } = useGetProfile();
