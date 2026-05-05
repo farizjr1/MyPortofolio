@@ -75,6 +75,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/flutceadmin" component={Login} />
+      <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/verify-email" component={VerifyEmail} />
