@@ -14,10 +14,11 @@ connectMongoDB().catch((err) => {
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
+const corsOrigin = process.env["CORS_ORIGIN"];
 app.use(
   cors({
-    origin: process.env["CORS_ORIGIN"] || "*",
-    credentials: true,
+    origin: corsOrigin ? corsOrigin.split(",").map((o) => o.trim()) : false,
+    credentials: !!corsOrigin,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
