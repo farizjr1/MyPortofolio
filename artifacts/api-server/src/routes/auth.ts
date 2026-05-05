@@ -34,12 +34,17 @@ router.post("/register", async (req: Request, res: Response) => {
       return;
     }
 
+    // First registered user becomes admin (portfolio owner bootstrap);
+    // all subsequent registrations default to viewer.
+    const adminExists = await User.exists({ role: "admin" });
+    const role = adminExists ? "viewer" : "admin";
+
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const user = await User.create({
       name,
       email,
       password,
-      role: "viewer",
+      role,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
