@@ -73,7 +73,6 @@ onlyBuiltDependencies:
   - esbuild
   - msw
   - unrs-resolver
-  - mongodb-memory-server
 
 overrides:
   # replit uses linux-x64 only, we can exclude all other platforms
