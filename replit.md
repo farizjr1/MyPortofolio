@@ -1,51 +1,57 @@
-# Workspace
+# Fariz Portfolio CMS
 
-## Overview
+Personal portfolio website with CMS, blog, analytics, and CV generator for Fariz Jelang Ramadhan.
 
-pnpm workspace monorepo using TypeScript. Portfolio CMS & CV Generator web app for Fariz Jelang Ramadhan. Ported from Vercel to Replit.
+## Run & Operate
+
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks + Zod schemas from OpenAPI spec
+- `pnpm run typecheck` — full typecheck across all packages
+- Frontend dev: `pnpm --filter @workspace/myportofolio run dev`
+- API dev: `pnpm --filter @workspace/api-server run dev`
+
+**Required env vars (production):** `MONGODB_URI`, `JWT_SECRET`, `FRONTEND_URL`
+**Optional:** `SMTP_EMAIL`, `SMTP_APP_PASSWORD` (Gmail SMTP for emails), `CORS_ORIGIN`
 
 ## Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **Frontend**: React + Vite (Tailwind v4, shadcn/ui, wouter routing, framer-motion)
-- **API framework**: Express 5
-- **Database**: MongoDB (in-memory via mongodb-memory-server in dev, or MONGODB_URI env var)
-- **Authentication**: JWT (jsonwebtoken), bcryptjs
-- **Validation**: Zod (api-zod), Orval codegen
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (ESM bundle)
+- **Frontend:** React + Vite, Tailwind v4, shadcn/ui, wouter, framer-motion, recharts
+- **Backend:** Express 5, MongoDB (mongoose), JWT auth, nodemailer
+- **Codegen:** Orval (OpenAPI → React Query hooks + Zod schemas)
+- **Runtime:** Node.js 24, pnpm workspaces, esbuild
 
-## Artifacts
+## Where Things Live
 
-- `artifacts/myportofolio` — React + Vite frontend (preview path: `/`)
-- `artifacts/api-server` — Express backend (preview path: `/api`)
+- `lib/api-spec/openapi.yaml` — source of truth for all API contracts (25+ operations)
+- `lib/api-client-react/src/generated/` — generated React Query hooks
+- `lib/api-zod/src/generated/` — generated Zod validators
+- `artifacts/myportofolio/src/` — React frontend (pages, components, hooks)
+- `artifacts/api-server/src/` — Express backend (models, routes, middlewares)
 
-## Key Commands
+## Architecture Decisions
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+- **In-memory MongoDB in dev:** `mongodb-memory-server` auto-starts if `MONGODB_URI` is unset; seeded with profile + portfolio templates.
+- **First-user-admin pattern:** First registered user becomes `admin`; subsequent registrations default to `viewer`.
+- **JWT ephemeral secret in dev:** Random secret generated at startup if `JWT_SECRET` unset; throws in production.
+- **No CORS wildcard:** `CORS_ORIGIN` env controls allowed origins; credentials disabled when unset.
+- **Codegen post-fix:** `lib/api-spec/package.json` codegen script overwrites `api-zod/src/index.ts` after orval runs (orval regenerates stale exports).
 
-## Environment Variables
+## Product
 
-- `MONGODB_URI` — MongoDB connection string (optional; falls back to in-memory in dev)
-- `JWT_SECRET` — JWT signing secret (defaults to "change-me-in-production")
-- `SMTP_EMAIL` / `SMTP_APP_PASSWORD` — SMTP credentials for email (optional)
-- `CORS_ORIGIN` — Allowed CORS origin (defaults to `*`)
-- `VITE_API_URL` — API base URL override for frontend (optional; uses relative URL by default)
+- **Public:** Home (typewriter hero), About (timeline + skill bars), Portfolio, Blog (markdown posts), CV download, Contact form
+- **Auth:** Login at `/flutceadmin` or `/login`, register, forgot/reset password (email), verify email
+- **Admin panel** (`/admin/*`): Dashboard with analytics mini-chart, Blog CRUD (markdown editor + preview), Portfolio CRUD, Content CMS, Profile editor, CV generator, Analytics page
+- **Analytics:** Page view tracking (sessionId-based), 30-day chart, top pages bar chart, top referrers, 90-day TTL auto-cleanup
+- **Email:** Verification + password reset via Gmail SMTP (from: admin@flutce.app, to: farizjrpend@gmail.com)
 
-## Architecture
+## User Preferences
 
-- OpenAPI spec lives in `lib/api-spec/openapi.yaml`
-- Generated React Query hooks: `lib/api-client-react/src/generated/`
-- Generated Zod schemas: `lib/api-zod/src/generated/`
-- MongoDB models: `artifacts/api-server/src/models/`
-- Express routes: `artifacts/api-server/src/routes/`
-- Admin panel at `/admin/*` — protected by JWT auth
-- Public portfolio at `/` — Home, About, Portfolio, CV, Contact pages
+- SMTP from hardcoded as `admin@flutce.app`, contact-to as `farizjrpend@gmail.com` (personal use, not team)
+- Dark/gold theme (`#FDE68A` primary), Poppins font
+- Indonesian language preferred for UI text
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+## Gotchas
+
+- After codegen, `lib/api-zod/src/index.ts` is overwritten by the script — do NOT manually edit it
+- `.migration-backup/` workflows failing is expected — those are backup copies only
+- `Blog/{slug}` GET increments view counter; use `GET /blog/admin` for admin list (no view increment)
+- Analytics track endpoint is public (no auth); summary requires admin JWT

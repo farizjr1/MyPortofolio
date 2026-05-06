@@ -890,3 +890,174 @@ export const DeleteCvParams = zod.object({
 export const DeleteCvResponse = zod.object({
   message: zod.string(),
 });
+
+/**
+ * @summary List published blog posts
+ */
+export const ListBlogPostsQueryParams = zod.object({
+  tag: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+  page: zod.coerce.string().optional(),
+  limit: zod.coerce.string().optional(),
+});
+
+export const ListBlogPostsResponse = zod.object({
+  posts: zod.array(
+    zod.object({
+      id: zod.string(),
+      title: zod.string(),
+      slug: zod.string(),
+      excerpt: zod.string(),
+      content: zod.string(),
+      coverImage: zod.string().optional(),
+      tags: zod.array(zod.string()).optional(),
+      published: zod.boolean().optional(),
+      publishedAt: zod.coerce.date().optional(),
+      readingTime: zod.number().optional(),
+      views: zod.number().optional(),
+      createdAt: zod.coerce.date().optional(),
+      updatedAt: zod.coerce.date().optional(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  pages: zod.number(),
+});
+
+/**
+ * @summary Create a blog post (admin)
+ */
+export const CreateBlogPostBody = zod.object({
+  title: zod.string(),
+  excerpt: zod.string(),
+  content: zod.string(),
+  coverImage: zod.string().optional(),
+  tags: zod.array(zod.string()).optional(),
+  published: zod.boolean().optional(),
+});
+
+/**
+ * @summary List all blog posts (admin, including drafts)
+ */
+export const ListBlogPostsAdminResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  slug: zod.string(),
+  excerpt: zod.string(),
+  content: zod.string(),
+  coverImage: zod.string().optional(),
+  tags: zod.array(zod.string()).optional(),
+  published: zod.boolean().optional(),
+  publishedAt: zod.coerce.date().optional(),
+  readingTime: zod.number().optional(),
+  views: zod.number().optional(),
+  createdAt: zod.coerce.date().optional(),
+  updatedAt: zod.coerce.date().optional(),
+});
+export const ListBlogPostsAdminResponse = zod.array(
+  ListBlogPostsAdminResponseItem,
+);
+
+/**
+ * @summary Get a published blog post by slug
+ */
+export const GetBlogPostParams = zod.object({
+  slug: zod.coerce.string(),
+});
+
+export const GetBlogPostResponse = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  slug: zod.string(),
+  excerpt: zod.string(),
+  content: zod.string(),
+  coverImage: zod.string().optional(),
+  tags: zod.array(zod.string()).optional(),
+  published: zod.boolean().optional(),
+  publishedAt: zod.coerce.date().optional(),
+  readingTime: zod.number().optional(),
+  views: zod.number().optional(),
+  createdAt: zod.coerce.date().optional(),
+  updatedAt: zod.coerce.date().optional(),
+});
+
+/**
+ * @summary Update a blog post (admin)
+ */
+export const UpdateBlogPostParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const UpdateBlogPostBody = zod.object({
+  title: zod.string(),
+  excerpt: zod.string(),
+  content: zod.string(),
+  coverImage: zod.string().optional(),
+  tags: zod.array(zod.string()).optional(),
+  published: zod.boolean().optional(),
+});
+
+export const UpdateBlogPostResponse = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  slug: zod.string(),
+  excerpt: zod.string(),
+  content: zod.string(),
+  coverImage: zod.string().optional(),
+  tags: zod.array(zod.string()).optional(),
+  published: zod.boolean().optional(),
+  publishedAt: zod.coerce.date().optional(),
+  readingTime: zod.number().optional(),
+  views: zod.number().optional(),
+  createdAt: zod.coerce.date().optional(),
+  updatedAt: zod.coerce.date().optional(),
+});
+
+/**
+ * @summary Delete a blog post (admin)
+ */
+export const DeleteBlogPostParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const DeleteBlogPostResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Track a page view (public)
+ */
+export const TrackPageViewBody = zod.object({
+  path: zod.string(),
+  referrer: zod.string().optional(),
+  sessionId: zod.string(),
+});
+
+/**
+ * @summary Analytics summary (admin)
+ */
+export const GetAnalyticsSummaryResponse = zod.object({
+  totalViews: zod.number(),
+  views30d: zod.number(),
+  views7d: zod.number(),
+  views24h: zod.number(),
+  uniqueVisitors30d: zod.number(),
+  topPages: zod.array(
+    zod.object({
+      path: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  dailyViews: zod.array(
+    zod.object({
+      date: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  topReferrers: zod.array(
+    zod.object({
+      referrer: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+});

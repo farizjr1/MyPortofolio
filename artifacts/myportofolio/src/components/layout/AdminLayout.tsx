@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useGetMe, useLogout } from "@workspace/api-client-react";
 import { clearToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Briefcase, FileText, User, FileBadge, LogOut, Loader2, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Briefcase, FileText, User, FileBadge, LogOut, Loader2, ArrowLeft, BookOpen, BarChart2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -43,7 +43,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const sidebarLinks = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
     { href: "/admin/portfolio", label: "Portfolio", icon: Briefcase },
+    { href: "/admin/blog", label: "Blog", icon: BookOpen },
     { href: "/admin/content", label: "Content", icon: FileText },
     { href: "/admin/profile", label: "Profile", icon: User },
     { href: "/admin/cv", label: "CV Manager", icon: FileBadge },

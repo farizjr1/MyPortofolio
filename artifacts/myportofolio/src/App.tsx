@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initAuth } from "@/lib/auth";
+import { usePageTracker } from "@/hooks/usePageTracker";
 
 // Layouts
 import PublicLayout from "@/components/layout/PublicLayout";
@@ -14,6 +15,8 @@ import About from "@/pages/About";
 import Portfolio from "@/pages/Portfolio";
 import Contact from "@/pages/Contact";
 import CvPage from "@/pages/Cv";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 import NotFound from "@/pages/not-found";
 
 // Auth Pages
@@ -30,6 +33,8 @@ import ContentManager from "@/pages/admin/Content";
 import ProfileEditor from "@/pages/admin/ProfileEditor";
 import CvManager from "@/pages/admin/CvManager";
 import CvGenerator from "@/pages/admin/CvGenerator";
+import BlogManager from "@/pages/admin/BlogManager";
+import AnalyticsPage from "@/pages/admin/Analytics";
 
 initAuth();
 const queryClient = new QueryClient({
@@ -42,6 +47,7 @@ const queryClient = new QueryClient({
 });
 
 function PublicRoutes() {
+  usePageTracker();
   return (
     <PublicLayout>
       <Switch>
@@ -50,6 +56,8 @@ function PublicRoutes() {
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/contact" component={Contact} />
         <Route path="/cv" component={CvPage} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
         <Route component={NotFound} />
       </Switch>
     </PublicLayout>
@@ -66,6 +74,8 @@ function AdminRoutes() {
         <Route path="/admin/profile" component={ProfileEditor} />
         <Route path="/admin/cv" component={CvManager} />
         <Route path="/admin/cv/new" component={CvGenerator} />
+        <Route path="/admin/blog" component={BlogManager} />
+        <Route path="/admin/analytics" component={AnalyticsPage} />
         <Route component={NotFound} />
       </Switch>
     </AdminLayout>
@@ -81,10 +91,10 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/reset-password" component={ResetPassword} />
-      
+
       <Route path="/admin/*" component={AdminRoutes} />
       <Route path="/admin" component={AdminRoutes} />
-      
+
       {/* Fallback to public routes */}
       <Route path="/*" component={PublicRoutes} />
     </Switch>

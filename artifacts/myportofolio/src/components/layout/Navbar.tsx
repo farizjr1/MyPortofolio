@@ -21,6 +21,7 @@ export default function Navbar() {
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/portfolio", label: "Portfolio" },
+    { href: "/blog", label: "Blog" },
     { href: "/cv", label: "CV" },
     { href: "/contact", label: "Contact" },
   ];

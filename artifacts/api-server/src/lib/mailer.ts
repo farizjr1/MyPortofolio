@@ -18,8 +18,8 @@ export function getTransporter(): Transporter | null {
   return _transporter;
 }
 
-export const smtpFrom    = () => process.env.SMTP_FROM    ?? `Portfolio <${process.env.SMTP_EMAIL ?? "noreply@example.com"}>`;
-export const contactTo   = () => process.env.CONTACT_TO  ?? process.env.SMTP_EMAIL ?? "";
+export const smtpFrom    = () => "Flutce <admin@flutce.app>";
+export const contactTo   = () => "farizjrpend@gmail.com";
 export const frontendUrl = () => process.env.FRONTEND_URL ?? process.env.CORS_ORIGIN ?? "http://localhost:5173";
 
 // ─── Email Templates ──────────────────────────────────────────────────────────

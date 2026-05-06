@@ -291,6 +291,70 @@ export interface CvData {
   updatedAt?: string;
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  tags?: string[];
+  published?: boolean;
+  publishedAt?: string;
+  readingTime?: number;
+  views?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BlogPostBody {
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  tags?: string[];
+  published?: boolean;
+}
+
+export interface BlogListResponse {
+  posts: BlogPost[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export interface TrackBody {
+  path: string;
+  referrer?: string;
+  sessionId: string;
+}
+
+export interface AnalyticsTopPage {
+  path: string;
+  count: number;
+}
+
+export interface AnalyticsDailyView {
+  date: string;
+  count: number;
+}
+
+export interface AnalyticsTopReferrer {
+  referrer: string;
+  count: number;
+}
+
+export interface AnalyticsSummary {
+  totalViews: number;
+  views30d: number;
+  views7d: number;
+  views24h: number;
+  uniqueVisitors30d: number;
+  topPages: AnalyticsTopPage[];
+  dailyViews: AnalyticsDailyView[];
+  topReferrers: AnalyticsTopReferrer[];
+}
+
 export type CreateCvBodyLanguagesItem = {
   id: string;
   name: string;
@@ -315,4 +379,15 @@ export type ListPortfolioParams = {
 export type ListContentParams = {
   section?: string;
   published?: boolean;
+};
+
+export type ListBlogPostsParams = {
+  tag?: string;
+  search?: string;
+  page?: string;
+  limit?: string;
+};
+
+export type TrackPageView201 = {
+  ok: boolean;
 };

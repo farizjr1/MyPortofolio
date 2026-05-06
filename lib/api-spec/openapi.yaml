@@ -20,6 +20,10 @@ tags:
     description: CMS content management
   - name: cv
     description: CV data management
+  - name: blog
+    description: Blog post management
+  - name: analytics
+    description: Site analytics
 
 paths:
   /healthz:
@@ -531,6 +535,173 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+
+  # ─── BLOG ────────────────────────────────────────────────────────────────────
+
+  /blog:
+    get:
+      operationId: listBlogPosts
+      tags: [blog]
+      summary: List published blog posts
+      parameters:
+        - in: query
+          name: tag
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: string }
+      responses:
+        "200":
+          description: Blog post list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogListResponse"
+    post:
+      operationId: createBlogPost
+      tags: [blog]
+      summary: Create a blog post (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogPostBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+
+  /blog/admin:
+    get:
+      operationId: listBlogPostsAdmin
+      tags: [blog]
+      summary: List all blog posts (admin, including drafts)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All blog posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BlogPost"
+
+  /blog/{slug}:
+    get:
+      operationId: getBlogPost
+      tags: [blog]
+      summary: Get a published blog post by slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Blog post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+        "404":
+          description: Not found
+
+  /blog/{id}:
+    put:
+      operationId: updateBlogPost
+      tags: [blog]
+      summary: Update a blog post (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogPostBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlogPost"
+    delete:
+      operationId: deleteBlogPost
+      tags: [blog]
+      summary: Delete a blog post (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ─── ANALYTICS ───────────────────────────────────────────────────────────────
+
+  /analytics/track:
+    post:
+      operationId: trackPageView
+      tags: [analytics]
+      summary: Track a page view (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackBody"
+      responses:
+        "201":
+          description: Tracked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                required: [ok]
+
+  /analytics/summary:
+    get:
+      operationId: getAnalyticsSummary
+      tags: [analytics]
+      summary: Analytics summary (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
 
 components:
   securitySchemes:
@@ -1158,6 +1329,154 @@ components:
         - id
         - label
         - personal
+
+    # ─── BLOG ──────────────────────────────────────────────────────────────────
+
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        coverImage:
+          type: string
+        tags:
+          type: array
+          items: { type: string }
+        published:
+          type: boolean
+        publishedAt:
+          type: string
+          format: date-time
+        readingTime:
+          type: number
+        views:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - slug
+        - excerpt
+        - content
+
+    BlogPostBody:
+      type: object
+      properties:
+        title:
+          type: string
+        excerpt:
+          type: string
+        content:
+          type: string
+        coverImage:
+          type: string
+        tags:
+          type: array
+          items: { type: string }
+        published:
+          type: boolean
+      required:
+        - title
+        - excerpt
+        - content
+
+    BlogListResponse:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlogPost"
+        total:
+          type: number
+        page:
+          type: number
+        pages:
+          type: number
+      required:
+        - posts
+        - total
+        - page
+        - pages
+
+    # ─── ANALYTICS ─────────────────────────────────────────────────────────────
+
+    TrackBody:
+      type: object
+      properties:
+        path:
+          type: string
+        referrer:
+          type: string
+        sessionId:
+          type: string
+      required:
+        - path
+        - sessionId
+
+    AnalyticsTopPage:
+      type: object
+      properties:
+        path: { type: string }
+        count: { type: number }
+      required: [path, count]
+
+    AnalyticsDailyView:
+      type: object
+      properties:
+        date: { type: string }
+        count: { type: number }
+      required: [date, count]
+
+    AnalyticsTopReferrer:
+      type: object
+      properties:
+        referrer: { type: string }
+        count: { type: number }
+      required: [referrer, count]
+
+    AnalyticsSummary:
+      type: object
+      properties:
+        totalViews: { type: number }
+        views30d: { type: number }
+        views7d: { type: number }
+        views24h: { type: number }
+        uniqueVisitors30d: { type: number }
+        topPages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalyticsTopPage"
+        dailyViews:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalyticsDailyView"
+        topReferrers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalyticsTopReferrer"
+      required:
+        - totalViews
+        - views30d
+        - views7d
+        - views24h
+        - uniqueVisitors30d
+        - topPages
+        - dailyViews
+        - topReferrers
 
     CreateCvBody:
       type: object
