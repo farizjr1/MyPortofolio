@@ -114,11 +114,15 @@ Klik **Deploy**. Setelah selesai, catat URL API: `https://farizjr-api.vercel.app
 
 ### 2. Environment Variables Frontend
 
-| Key | Value | Environment |
-|---|---|---|
-| `VITE_API_URL` | `https://farizjr-api.vercel.app` | Production |
+Tidak ada env var wajib untuk frontend di Vercel. `vercel.json` sudah mengandung rewrite proxy:
 
-> **Catatan:** `VITE_API_URL` harus diisi jika frontend dan API berada di domain berbeda. Jika di domain yang sama (subdomain), bisa dikosongkan.
+```
+/api/:path*  →  https://farizjr-api.vercel.app/api/:path*
+```
+
+Semua API call dari browser otomatis diteruskan ke API server tanpa perlu `VITE_API_URL`.
+
+> **Opsional:** Jika ingin API di domain berbeda dari default (`farizjr-api.vercel.app`), set `VITE_API_URL` dan update destination di `vercel.json` accordingly.
 
 ### 3. Deploy
 

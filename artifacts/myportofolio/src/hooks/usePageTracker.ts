@@ -17,8 +17,10 @@ export function usePageTracker() {
   const [location] = useLocation();
 
   useEffect(() => {
-    const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-    fetch(`${base}/api/analytics/track`, {
+    const apiBase = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "")
+      ?? import.meta.env.BASE_URL?.replace(/\/$/, "")
+      ?? "";
+    fetch(`${apiBase}/api/analytics/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
