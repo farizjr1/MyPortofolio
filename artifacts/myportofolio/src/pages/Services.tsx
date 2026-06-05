@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useListContent } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,6 +79,21 @@ export default function Services() {
 
   return (
     <div className="container max-w-6xl mx-auto py-12 md:py-20 px-4">
+      <SEO
+        title="Services"
+        description="Layanan profesional Fariz Jelang Ramadhan — konsultasi keuangan, pengembangan web, analisis data, dan solusi teknologi bisnis."
+        url="/services"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          name: "Services — Fariz Jelang Ramadhan",
+          url: "https://farizjr.vercel.app/services",
+          provider: {
+            "@type": "Person",
+            name: "Fariz Jelang Ramadhan",
+          },
+        }}
+      />
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

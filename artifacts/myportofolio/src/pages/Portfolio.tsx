@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useListPortfolio } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -247,6 +248,18 @@ export default function Portfolio() {
 
   return (
     <div className="container max-w-6xl mx-auto py-12 md:py-20 px-4">
+      <SEO
+        title="Portfolio"
+        description="Kumpulan proyek Fariz Jelang Ramadhan — web apps, data analysis tools, accounting systems, dan AI chatbots."
+        url="/portfolio"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Portfolio — Fariz Jelang Ramadhan",
+          url: "https://farizjr.vercel.app/portfolio",
+          description: "Proyek web, data analysis, dan tools yang dibangun oleh Fariz Jelang Ramadhan.",
+        }}
+      />
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useListBlogPosts } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,21 @@ export default function Blog() {
 
   return (
     <div className="container max-w-4xl mx-auto py-12 md:py-20 px-4">
+      <SEO
+        title="Blog"
+        description="Artikel dan tulisan Fariz Jelang Ramadhan tentang akuntansi, teknologi, pengembangan web, dan analisis data."
+        url="/blog"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "Blog — Fariz Jelang Ramadhan",
+          url: "https://farizjr.vercel.app/blog",
+          author: {
+            "@type": "Person",
+            name: "Fariz Jelang Ramadhan",
+          },
+        }}
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

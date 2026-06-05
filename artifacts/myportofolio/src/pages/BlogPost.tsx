@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "wouter";
 import { useGetBlogPost } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,38 @@ export default function BlogPost() {
 
   return (
     <>
+      <SEO
+        title={post.title}
+        description={post.excerpt ?? `Baca artikel "${post.title}" di blog Fariz Jelang Ramadhan.`}
+        image={post.coverImage ?? undefined}
+        url={`/blog/${post.slug}`}
+        type="article"
+        publishedAt={post.publishedAt ?? undefined}
+        updatedAt={post.updatedAt ?? undefined}
+        author="Fariz Jelang Ramadhan"
+        tags={post.tags ?? []}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: post.title,
+          description: post.excerpt ?? "",
+          image: post.coverImage ?? "https://farizjr.vercel.app/opengraph.jpg",
+          datePublished: post.publishedAt ?? "",
+          dateModified: post.updatedAt ?? post.publishedAt ?? "",
+          author: {
+            "@type": "Person",
+            name: "Fariz Jelang Ramadhan",
+            url: "https://farizjr.vercel.app",
+          },
+          publisher: {
+            "@type": "Person",
+            name: "Fariz Jelang Ramadhan",
+            url: "https://farizjr.vercel.app",
+          },
+          keywords: (post.tags ?? []).join(", "),
+          url: `https://farizjr.vercel.app/blog/${post.slug}`,
+        }}
+      />
       <ReadingProgress />
       <motion.article
         initial={{ opacity: 0, y: 20 }}

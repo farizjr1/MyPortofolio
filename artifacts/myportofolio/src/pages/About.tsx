@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,23 @@ export default function About() {
 
   return (
     <div className="container max-w-5xl mx-auto py-12 md:py-20 px-4">
+      <SEO
+        title="About"
+        description="Kenali lebih jauh Fariz Jelang Ramadhan — background akuntansi, perjalanan karier, skill teknologi, dan pengalaman profesional."
+        url="/about"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          name: "About — Fariz Jelang Ramadhan",
+          url: "https://farizjr.vercel.app/about",
+          mainEntity: {
+            "@type": "Person",
+            name: profile?.name ?? "Fariz Jelang Ramadhan",
+            description: profile?.bio ?? "",
+            knowsAbout: (profile?.skills ?? []).map((s: { name: string }) => s.name),
+          },
+        }}
+      />
       <motion.div variants={container} initial="hidden" animate="visible" className="space-y-20">
 
         {/* ── Header + Bio ── */}

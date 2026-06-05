@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useGetProfile } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,17 @@ export default function Contact() {
 
   return (
     <div className="container max-w-5xl mx-auto py-12 md:py-20 px-4">
+      <SEO
+        title="Contact"
+        description="Hubungi Fariz Jelang Ramadhan untuk kolaborasi, proyek, atau diskusi — tersedia via email, LinkedIn, dan GitHub."
+        url="/contact"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          name: "Contact — Fariz Jelang Ramadhan",
+          url: "https://farizjr.vercel.app/contact",
+        }}
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useGetProfile, useListBlogPosts, useListPortfolio } from "@workspace/api-client-react";
+import SEO from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Github, Linkedin, Mail, ArrowRight, Code2, Calculator, TrendingUp, Sparkles, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -81,8 +82,35 @@ export default function Home() {
   const recentPosts = (blogData as { posts?: { id: string; title: string; slug: string; excerpt: string; tags?: string[]; publishedAt?: string }[] } | undefined)?.posts ?? [];
   const featuredProjects = (projects ?? []).filter((p) => p.featured).slice(0, 3);
 
+  const profileName = profile?.name ?? "Fariz Jelang Ramadhan";
+
   return (
     <div className="flex flex-col">
+      <SEO
+        title="Home"
+        description={`Portfolio ${profileName} — Akuntan & Full-Stack Developer yang membangun solusi teknologi berbasis data.`}
+        url="/"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            name: profileName,
+            url: "https://farizjr.vercel.app",
+            jobTitle: profile?.title ?? "Accountant & Full-Stack Developer",
+            description: profile?.bio ?? "",
+            sameAs: [
+              profile?.github ? `https://github.com/${profile.github}` : null,
+              profile?.linkedin ? `https://linkedin.com/in/${profile.linkedin}` : null,
+            ].filter(Boolean),
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: profileName,
+            url: "https://farizjr.vercel.app",
+          },
+        ]}
+      />
       {/* ── Hero ── */}
       <section className="relative w-full min-h-[92vh] flex flex-col items-center justify-center px-4 text-center overflow-hidden">
         {/* Background glows */}
