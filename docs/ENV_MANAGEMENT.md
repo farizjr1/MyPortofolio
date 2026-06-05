@@ -4,16 +4,16 @@ Panduan lengkap pengelolaan environment variables untuk project Fariz Portfolio 
 
 ## Overview
 
-Project menggunakan dua artifact terpisah dengan env vars masing-masing:
+Project menggunakan dua service terpisah dengan env vars masing-masing:
 
-| Artifact | Path | Env vars yang digunakan |
+| Service | Platform | Env vars |
 |---|---|---|
-| `api-server` | `artifacts/api-server/` | `MONGODB_URI`, `JWT_SECRET`, `SMTP_*`, `CORS_ORIGIN`, `PORT`, `NODE_ENV`, `FRONTEND_URL` |
-| `myportofolio` | `artifacts/myportofolio/` | `VITE_API_URL`, `PORT` |
+| `api-server` | Railway | `MONGODB_URI`, `JWT_SECRET`, `SMTP_*`, `CORS_ORIGIN`, `FRONTEND_URL`, `NODE_ENV` |
+| `myportofolio` | Vercel | `VITE_API_URL` |
 
 ---
 
-## Variabel API Server
+## Variabel API Server (Railway)
 
 ### Wajib di Production
 
@@ -21,7 +21,9 @@ Project menggunakan dua artifact terpisah dengan env vars masing-masing:
 |---|---|---|
 | `MONGODB_URI` | Connection string MongoDB Atlas | `mongodb+srv://user:pass@cluster.mongodb.net/portfolio` |
 | `JWT_SECRET` | Secret panjang acak untuk signing JWT | `openssl rand -hex 64` |
-| `FRONTEND_URL` | URL frontend untuk CORS dan link email | `https://farizjr.vercel.app` |
+| `FRONTEND_URL` | URL frontend Vercel | `https://farizjr.vercel.app` |
+| `CORS_ORIGIN` | Origin yang diizinkan (harus sama dengan `FRONTEND_URL`) | `https://farizjr.vercel.app` |
+| `NODE_ENV` | Mode runtime | `production` |
 
 ### Email (Opsional tapi Direkomendasikan)
 
@@ -30,76 +32,69 @@ Project menggunakan dua artifact terpisah dengan env vars masing-masing:
 | `SMTP_EMAIL` | Akun Gmail pengirim | `admin@gmail.com` |
 | `SMTP_APP_PASSWORD` | App Password Gmail (bukan password biasa) | `abcd efgh ijkl mnop` |
 
-> **Catatan:** Gmail App Password dibuat di [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). Aktifkan 2FA terlebih dahulu.
+> **Catatan Gmail App Password:** Buat di [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). Aktifkan 2FA terlebih dahulu.
 >
-> Email dikirim **from**: `Flutce <admin@flutce.app>`, **to**: `farizjrpend@gmail.com` (hardcoded, tidak perlu env var).
+> Email dikirim **from**: `Flutce <admin@flutce.app>`, **to**: `farizjrpend@gmail.com`.
 
-### Opsional
+### Variabel yang Di-set Otomatis oleh Railway
 
-| Variabel | Default | Keterangan |
+| Variabel | Nilai | Keterangan |
 |---|---|---|
-| `CORS_ORIGIN` | `*` (semua) | Origin yang diizinkan, pisahkan dengan koma: `https://farizjr.vercel.app,https://www.farizjr.com` |
-| `PORT` | `8080` | Port server Express |
-| `NODE_ENV` | `development` | Set ke `production` di deployment |
+| `PORT` | (random) | Railway assign otomatis — **jangan di-set manual** |
 
-### Perilaku Default (Development)
+### Perilaku Default (Development / Tanpa Env)
 
-- `MONGODB_URI` tidak di-set → **mongodb-memory-server** otomatis digunakan; data akan hilang saat restart
-- `JWT_SECRET` tidak di-set → random secret ephemeral digunakan; semua session logout saat restart
-- `SMTP_*` tidak di-set → email tidak terkirim, error akan di-log tapi tidak crash
+| Kondisi | Perilaku |
+|---|---|
+| `MONGODB_URI` tidak di-set | **mongodb-memory-server** — data hilang saat restart |
+| `JWT_SECRET` tidak di-set | Random ephemeral — semua sesi logout saat restart |
+| `SMTP_*` tidak di-set | Email tidak terkirim — error di-log tapi tidak crash |
+| `CORS_ORIGIN` tidak di-set | Semua origin diizinkan (`*`) |
 
 ---
 
-## Variabel Frontend (Vite)
+## Variabel Frontend (Vercel)
 
-| Variabel | Default | Keterangan |
+| Variabel | Required | Keterangan |
 |---|---|---|
-| `VITE_API_URL` | `""` (relative) | Override URL API. Gunakan URL penuh hanya jika API dan frontend di-deploy ke domain berbeda. |
-| `PORT` | `23236` | Port dev server Vite |
+| `VITE_API_URL` | **Wajib di production** | URL Railway API server. Contoh: `https://fariz-portfolio-production.up.railway.app` |
 
-> **Catatan Vite:** Hanya variabel yang diawali `VITE_` yang tersedia di browser. Variabel lain di `.env` tidak akan terekspos ke client.
+> **Catatan Vite:** Hanya variabel `VITE_*` yang tersedia di browser. Variabel lain tidak terekspos ke client.
+
+> **Tanpa `VITE_API_URL`:** API calls gagal — frontend tidak bisa menampilkan konten.
 
 ---
 
-## Setup di Replit
+## Setup di Replit (Development)
 
 Semua secret dikelola via **Replit Secrets** (bukan file `.env`):
 
 1. Buka tab **Secrets** di sidebar Replit
-2. Tambahkan key-value sesuai tabel di atas
+2. Tambahkan key-value sesuai tabel API Server di atas
 3. Secret otomatis tersedia sebagai `process.env.NAMA_VAR`
 
-**Jangan pernah:**
-- Commit secret ke git
-- Hardcode credential di kode
-- Simpan secret di file `.env` yang di-commit
+**Tidak perlu** `VITE_API_URL` di Replit — dev server Vite menggunakan proxy Replit yang sudah terkonfigurasi.
 
 ---
 
-## Setup di Vercel
+## Setup di Railway (Production API)
 
-Lihat [DeployToVercel.md](./DeployToVercel.md) untuk instruksi lengkap pengaturan env vars di Vercel dashboard.
+1. Railway dashboard → Project → Service → tab **Variables**
+2. Klik **+ New Variable** untuk setiap variabel
+3. Klik **Deploy** setelah semua variable di-set
+
+Lihat [DeployToRailway.md](./DeployToRailway.md) untuk panduan lengkap.
 
 ---
 
-## Setup di GitHub Actions / CI
+## Setup di Vercel (Production Frontend)
 
-Tambahkan di **Settings → Secrets and variables → Actions**:
+1. Vercel dashboard → Project `farizjr` → **Settings** → **Environment Variables**
+2. Tambahkan `VITE_API_URL` dengan URL Railway API
+3. Set Environment: **Production** (dan optionally **Preview**)
+4. Klik **Save**, lalu **Redeploy** project
 
-```
-MONGODB_URI
-JWT_SECRET
-SMTP_EMAIL
-SMTP_APP_PASSWORD
-FRONTEND_URL
-```
-
-Referensi di workflow file:
-```yaml
-env:
-  MONGODB_URI: ${{ secrets.MONGODB_URI }}
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
-```
+Lihat [DeployToVercel.md](./DeployToVercel.md) untuk panduan lengkap.
 
 ---
 
@@ -113,4 +108,36 @@ openssl rand -hex 64
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
-Gunakan output sebagai nilai `JWT_SECRET`.
+---
+
+## Alur Koneksi Frontend → Backend
+
+```
+Browser
+  │
+  │  https://farizjr.vercel.app
+  ↓
+Vercel (Frontend)
+  │
+  │  VITE_API_URL = https://fariz-portfolio-production.up.railway.app
+  │  (baked into bundle saat build time)
+  ↓
+Railway (API Server)
+  │
+  │  MONGODB_URI = mongodb+srv://...
+  ↓
+MongoDB Atlas
+```
+
+---
+
+## Checklist Sebelum Go Live
+
+- [ ] `MONGODB_URI` di Railway → connect ke MongoDB Atlas production cluster
+- [ ] `JWT_SECRET` di Railway → string acak 64 karakter
+- [ ] `FRONTEND_URL` dan `CORS_ORIGIN` di Railway → URL Vercel frontend
+- [ ] `SMTP_EMAIL` + `SMTP_APP_PASSWORD` di Railway → Gmail App Password
+- [ ] `NODE_ENV=production` di Railway
+- [ ] `VITE_API_URL` di Vercel → URL Railway API
+- [ ] Redeploy frontend Vercel setelah set `VITE_API_URL`
+- [ ] Update `RAILWAY_URL` placeholder di `artifacts/myportofolio/vercel.json` untuk sitemap
