@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "buildCommand": "node ./build.mjs",
+  "installCommand": "pnpm install",
+  "builds": [
+    {
+      "src": "dist/index.mjs",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["dist/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/index.mjs"
+    }
+  ]
+}
