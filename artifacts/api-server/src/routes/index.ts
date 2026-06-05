@@ -8,10 +8,12 @@ import cvRouter from "./cv";
 import contactRouter from "./contact";
 import blogRouter from "./blog";
 import analyticsRouter from "./analytics";
+import sitemapRouter from "./sitemap";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(sitemapRouter);
 router.use("/auth", authRouter);
 router.use("/profile", profileRouter);
 router.use("/portfolio", portfolioRouter);
