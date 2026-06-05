@@ -38,7 +38,7 @@ Personal portfolio website with CMS, blog, analytics, and CV generator for Fariz
 ## Product
 
 - **Public:** Home (typewriter hero), About (timeline + skill bars), Portfolio, Blog (markdown posts), CV download, Contact form
-- **Auth:** Login at `/flutceadmin` or `/login`, register, forgot/reset password (email), verify email
+- **Auth:** Login di `/login`, register, forgot/reset password (email), verify email
 - **Admin panel** (`/admin/*`): Dashboard with analytics mini-chart, Blog CRUD (markdown editor + preview), Portfolio CRUD, Content CMS, Profile editor, CV generator, Analytics page
 - **Analytics:** Page view tracking (sessionId-based), 30-day chart, top pages bar chart, top referrers, 90-day TTL auto-cleanup
 - **Email:** Verification + password reset via Gmail SMTP (from: admin@flutce.app, to: farizjrpend@gmail.com)
