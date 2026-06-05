@@ -40,6 +40,32 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-router": ["wouter"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-motion": ["framer-motion"],
+          "vendor-charts": ["recharts"],
+          "vendor-ui": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-label",
+            "@radix-ui/react-slot",
+          ],
+          "vendor-editor": ["react-simplemde-editor", "easymde"],
+          "vendor-markdown": ["react-markdown", "remark-gfm", "dompurify"],
+          "vendor-pdf": ["@react-pdf/renderer"],
+          "vendor-misc": ["axios", "zod", "date-fns", "clsx", "class-variance-authority", "tailwind-merge"],
+        },
+      },
+    },
   },
   server: {
     port,
