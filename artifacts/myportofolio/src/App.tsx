@@ -17,6 +17,7 @@ import Contact from "@/pages/Contact";
 import CvPage from "@/pages/Cv";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
+import Services from "@/pages/Services";
 import NotFound from "@/pages/not-found";
 
 // Auth Pages
@@ -56,6 +57,7 @@ function PublicRoutes() {
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/contact" component={Contact} />
         <Route path="/cv" component={CvPage} />
+        <Route path="/services" component={Services} />
         <Route path="/blog" component={Blog} />
         <Route path="/blog/:slug" component={BlogPost} />
         <Route component={NotFound} />
