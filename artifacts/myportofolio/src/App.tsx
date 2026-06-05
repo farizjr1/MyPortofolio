@@ -97,21 +97,21 @@ function AdminRoutes() {
 
 function Router() {
   return (
-    <Switch>
-      <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/reset-password" component={ResetPassword} />
-      </Suspense>
 
-      <Route path="/admin/*" component={AdminRoutes} />
-      <Route path="/admin" component={AdminRoutes} />
+        <Route path="/admin/*" component={AdminRoutes} />
+        <Route path="/admin" component={AdminRoutes} />
 
-      {/* Fallback to public routes */}
-      <Route path="/*" component={PublicRoutes} />
-    </Switch>
+        {/* Fallback to public routes */}
+        <Route path="/*" component={PublicRoutes} />
+      </Switch>
+    </Suspense>
   );
 }
 
