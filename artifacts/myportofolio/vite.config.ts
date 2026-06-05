@@ -59,7 +59,6 @@ export default defineConfig({
             "@radix-ui/react-label",
             "@radix-ui/react-slot",
           ],
-          "vendor-editor": ["react-simplemde-editor", "easymde"],
           "vendor-markdown": ["react-markdown", "remark-gfm", "dompurify"],
           "vendor-pdf": ["@react-pdf/renderer"],
           "vendor-misc": ["axios", "zod", "date-fns", "clsx", "class-variance-authority", "tailwind-merge"],
