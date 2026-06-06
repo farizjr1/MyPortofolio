@@ -80,7 +80,7 @@ export default function Home() {
 
   const displayName = profile?.name || "Fariz Jelang Ramadhan";
   const recentPosts = (blogData as { posts?: { id: string; title: string; slug: string; excerpt: string; tags?: string[]; publishedAt?: string }[] } | undefined)?.posts ?? [];
-  const featuredProjects = (projects ?? []).filter((p) => p.featured).slice(0, 3);
+  const featuredProjects = (Array.isArray(projects) ? projects : []).filter((p) => p.featured).slice(0, 3);
 
   const profileName = profile?.name ?? "Fariz Jelang Ramadhan";
 
@@ -204,7 +204,7 @@ export default function Home() {
         <div className="container max-w-5xl mx-auto px-4 py-6">
           <div className="grid grid-cols-3 divide-x divide-border/30">
             {[
-              { value: `${(projects ?? []).length}+`, label: "Proyek Selesai" },
+              { value: `${(Array.isArray(projects) ? projects : []).length}+`, label: "Proyek Selesai" },
               { value: "3+", label: "Tahun Pengalaman" },
               { value: "100%", label: "Client Satisfaction" },
             ].map((stat, i) => (

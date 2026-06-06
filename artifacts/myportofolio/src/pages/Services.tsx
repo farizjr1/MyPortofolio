@@ -75,7 +75,7 @@ export default function Services() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const items = (contents ?? []).filter((c) => c.published);
+  const items = (Array.isArray(contents) ? contents : []).filter((c) => c.published);
 
   return (
     <div className="container max-w-6xl mx-auto py-12 md:py-20 px-4">

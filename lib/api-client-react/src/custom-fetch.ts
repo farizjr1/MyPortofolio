@@ -302,6 +302,21 @@ async function parseSuccessBody(
   const effectiveType =
     responseType === "auto" ? inferResponseType(response) : responseType;
 
+  // When responseType is "auto" and server returns HTML (e.g. a catch-all
+  // rewrite returning index.html), treat it as an error so React Query sets
+  // data=undefined rather than data="<!DOCTYPE html>..." which breaks .filter()
+  if (responseType === "auto" && effectiveType === "text") {
+    const mediaType = getMediaType(response.headers);
+    if (mediaType && mediaType.includes("html")) {
+      throw new ResponseParseError(
+        response,
+        "",
+        new Error("Received HTML instead of API JSON — check VITE_API_URL or proxy config"),
+        requestInfo,
+      );
+    }
+  }
+
   switch (effectiveType) {
     case "json":
       return parseJsonBody(response, requestInfo);

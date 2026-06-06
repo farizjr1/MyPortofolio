@@ -234,17 +234,16 @@ export default function Portfolio() {
 
   const categories = [
     "All",
-    ...Array.from(new Set((projects || []).map((p) => p.category))),
+    ...Array.from(new Set((Array.isArray(projects) ? projects : []).map((p) => p.category))),
   ];
 
-  const filteredProjects =
-    projects
-      ?.filter((p) => filter === "All" || p.category === filter)
-      .sort((a, b) => {
-        if (a.featured && !b.featured) return -1;
-        if (!a.featured && b.featured) return 1;
-        return (a.order || 0) - (b.order || 0);
-      }) || [];
+  const filteredProjects = (Array.isArray(projects) ? projects : [])
+    .filter((p) => filter === "All" || p.category === filter)
+    .sort((a, b) => {
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      return (a.order || 0) - (b.order || 0);
+    });
 
   return (
     <div className="container max-w-6xl mx-auto py-12 md:py-20 px-4">

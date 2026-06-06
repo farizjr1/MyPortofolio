@@ -68,10 +68,10 @@ export class ErrorBoundary extends Component<Props, State> {
               Muat Ulang
             </button>
 
-            {this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="text-left mt-4">
                 <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
-                  Detail error
+                  Detail error (dev only)
                 </summary>
                 <pre className="mt-2 text-xs text-red-400 bg-gray-900 rounded p-3 overflow-auto max-h-40 whitespace-pre-wrap break-all">
                   {this.state.error.message}
