@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initAuth } from "@/lib/auth";
 import { usePageTracker } from "@/hooks/usePageTracker";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Layouts
 import PublicLayout from "@/components/layout/PublicLayout";
